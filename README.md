@@ -12,8 +12,9 @@ racontez une histoire, laissez le produit se vendre.
 
 ```
 GitHub (commits) ─┐
-                  ├─→ Claude (storytelling) ─→ x-thread.md / linkedin.md / reddit.md
-Notion (tâches) ──┘                        └─→ progression.svg (commits par jour)
+Notion (tâches) ──┼─→ Claude (storytelling) ─→ x-thread.md / linkedin.md / reddit.md
+Stripe (MRR) ─────┘                        ├─→ progression.svg (commits par jour)
+                                           └─→ revenus.svg (encaissements + MRR)
 ```
 
 1. **Collecte** — les commits du dépôt sur la période (GitHub API) et les tâches
@@ -47,6 +48,10 @@ npm run dev -- generate --repo vous/votre-saas --days 7
 # Posts en français, uniquement pour X, avec du contexte produit
 npm run dev -- generate --repo vous/votre-saas --lang fr --platforms x \
   --context "SaaS d'emailing pour créateurs de contenu, cible US"
+
+# Publier le thread généré sur X (aperçu sans --yes, publication avec)
+npm run dev -- publish
+npm run dev -- publish --yes
 ```
 
 ### Options
@@ -73,17 +78,34 @@ npm run dev -- generate --repo vous/votre-saas --lang fr --platforms x \
 | `NOTION_DATABASE_ID` | Base Notion contenant vos tâches |
 | `NOTION_STATUS_PROPERTY` | Nom de la propriété de statut (défaut `Status`) |
 | `NOTION_DONE_VALUE` | Valeur "terminé" (défaut `Done`) — propriétés `status`, `select` ou `checkbox` supportées |
+| `STRIPE_SECRET_KEY` | Optionnel — MRR dans le storytelling + graphique `revenus.svg` |
+| `X_API_KEY` `X_API_SECRET` `X_ACCESS_TOKEN` `X_ACCESS_SECRET` | Requis pour `bip publish` — app developer.x.com avec accès "Read and write" (OAuth 1.0a) |
 
 ## Ce que produit une exécution
 
 ```
 output/2026-07-14/
 ├── progression.svg   # graphique commits/jour, ratio 16:9, prêt à joindre
+├── revenus.svg       # encaissements/jour + MRR héros (si Stripe configuré)
 ├── posts.json        # les trois posts en JSON structuré
 ├── x-thread.md       # thread X : hook + 3-6 tweets
 ├── linkedin.md       # post narratif avec leçon métier
 └── reddit.md         # titre + corps, ton authentique r/SaaS
 ```
+
+## Publication automatique du vendredi (mode cron)
+
+Le workflow `.github/workflows/buildinpublic.yml` tourne **chaque vendredi à
+9h UTC** (et à la demande via *Run workflow*) :
+
+1. collecte la semaine écoulée du dépôt courant,
+2. rédige les brouillons et les dépose en **artefact** téléchargeable,
+3. **publie le thread X automatiquement** si les 4 secrets X sont définis.
+
+Configurez les secrets dans *Settings → Secrets and variables → Actions* :
+`ANTHROPIC_API_KEY` (requis), puis selon vos besoins `NOTION_TOKEN`,
+`NOTION_DATABASE_ID`, `STRIPE_SECRET_KEY`, `X_API_KEY`, `X_API_SECRET`,
+`X_ACCESS_TOKEN`, `X_ACCESS_SECRET`.
 
 ## Philosophie du storytelling
 
@@ -98,10 +120,13 @@ L'IA suit des règles strictes pour éviter le contenu générique :
 
 ## Roadmap
 
-- [ ] Publication directe (API X, LinkedIn) avec file d'attente
-- [ ] Mode cron : un post automatique chaque vendredi
-- [ ] Sources supplémentaires : Linear, Stripe (MRR), Plausible (trafic)
-- [ ] Graphiques additionnels : courbe MRR, streak de jours consécutifs
+- [x] Publication directe sur X (`bip publish`)
+- [x] Mode cron : un post automatique chaque vendredi (GitHub Actions)
+- [x] Source Stripe : MRR + graphique des encaissements
+- [ ] Upload du graphique en pièce jointe du tweet (media upload)
+- [ ] Publication LinkedIn
+- [ ] Sources supplémentaires : Linear, Plausible (trafic)
+- [ ] Graphique streak de jours consécutifs
 - [ ] Mémoire des posts précédents pour éviter les répétitions
 
 ## Licence

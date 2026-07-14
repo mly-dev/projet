@@ -12,6 +12,7 @@ export function writeDrafts(
   posts: GeneratedPosts | null,
   platforms: Platform[],
   chartSvg: string | null,
+  revenueSvg: string | null = null,
 ): string {
   const dateSlug = new Date().toISOString().slice(0, 10);
   const dir = path.join(outDir, dateSlug);
@@ -19,6 +20,9 @@ export function writeDrafts(
 
   if (chartSvg) {
     fs.writeFileSync(path.join(dir, "progression.svg"), chartSvg, "utf8");
+  }
+  if (revenueSvg) {
+    fs.writeFileSync(path.join(dir, "revenus.svg"), revenueSvg, "utf8");
   }
 
   if (posts) {
@@ -57,4 +61,19 @@ export function writeDrafts(
   }
 
   return dir;
+}
+
+/**
+ * Retourne le dossier de brouillons le plus récent (output/AAAA-MM-JJ),
+ * ou null s'il n'y en a aucun.
+ */
+export function findLatestDraftDir(outDir: string): string | null {
+  if (!fs.existsSync(outDir)) return null;
+  const dirs = fs
+    .readdirSync(outDir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(e.name))
+    .map((e) => e.name)
+    .sort();
+  const latest = dirs.at(-1);
+  return latest ? path.join(outDir, latest) : null;
 }

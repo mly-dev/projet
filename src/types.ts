@@ -20,6 +20,8 @@ export interface Activity {
   until: string; // ISO 8601
   commits: Commit[];
   notionTasks: NotionTask[];
+  /** Métriques Stripe (MRR, revenus) — présent si STRIPE_SECRET_KEY est configuré. */
+  stripe?: import("./collectors/stripe.js").StripeMetrics;
 }
 
 /** Les posts générés par l'IA, un par plateforme. */

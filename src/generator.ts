@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { formatAmount } from "./collectors/stripe.js";
 import type { Activity, GeneratedPosts, GenerateOptions } from "./types.js";
 
 const MODEL = "claude-opus-4-8";
@@ -94,10 +95,17 @@ function buildUserPrompt(activity: Activity, opts: GenerateOptions): string {
     .map((t) => `- ${t.completedAt.slice(0, 10)} ${t.title}`)
     .join("\n");
 
+  let metricsBlock = "";
+  if (activity.stripe) {
+    const { mrrCents, currency, revenueByDay } = activity.stripe;
+    const totalCents = revenueByDay.reduce((s, d) => s + d.amountCents, 0);
+    metricsBlock = `\nMétriques (Stripe) : MRR actuel ${formatAmount(mrrCents, currency)}/mois ; ${formatAmount(totalCents, currency)} encaissés sur la période. La transparence sur les chiffres est au cœur du build in public : intègre-les naturellement dans l'histoire.\n`;
+  }
+
   return `Projet : ${activity.projectName} (dépôt ${activity.repo})
 Période : du ${activity.since.slice(0, 10)} au ${activity.until.slice(0, 10)}
 Langue des posts : ${lang}
-${opts.productContext ? `Contexte produit : ${opts.productContext}\n` : ""}
+${opts.productContext ? `Contexte produit : ${opts.productContext}\n` : ""}${metricsBlock}
 Commits GitHub (${activity.commits.length}) :
 ${commitLines || "(aucun)"}
 

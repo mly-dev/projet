@@ -41,5 +41,16 @@ export function demoActivity(days: number): Activity {
       { title: "Interviewer 3 beta testeurs", completedAt: day(3, 12) },
       { title: "Rédiger la page de vente", completedAt: day(5, 15) },
     ],
+    stripe: {
+      mrrCents: 84700, // 847 €/mois
+      currency: "eur",
+      revenueByDay: [
+        { date: day(0).slice(0, 10), amountCents: 2900 },
+        { date: day(1).slice(0, 10), amountCents: 5800 },
+        { date: day(3).slice(0, 10), amountCents: 2900 },
+        { date: day(4).slice(0, 10), amountCents: 11600 },
+        { date: day(6).slice(0, 10), amountCents: 8700 },
+      ],
+    },
   };
 }
