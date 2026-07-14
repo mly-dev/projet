@@ -1,0 +1,40 @@
+{
+  "name": "bip-assistant",
+  "version": "0.1.0",
+  "description": "Assistant Build in Public automatisé : transforme vos commits GitHub et tâches Notion en posts engageants pour X, LinkedIn et Reddit, avec graphiques de progression.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "bip": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "build-in-public",
+    "solopreneur",
+    "twitter",
+    "linkedin",
+    "reddit",
+    "github",
+    "notion",
+    "claude",
+    "marketing"
+  ]
+}
