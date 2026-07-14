@@ -20,8 +20,12 @@ export interface Activity {
   until: string; // ISO 8601
   commits: Commit[];
   notionTasks: NotionTask[];
+  /** Issues Linear terminées — présent si LINEAR_API_KEY est configuré. */
+  linearIssues?: NotionTask[];
   /** Métriques Stripe (MRR, revenus) — présent si STRIPE_SECRET_KEY est configuré. */
   stripe?: import("./collectors/stripe.js").StripeMetrics;
+  /** Trafic Plausible — présent si PLAUSIBLE_API_KEY + PLAUSIBLE_SITE_ID sont configurés. */
+  plausible?: import("./collectors/plausible.js").PlausibleStats;
 }
 
 /** Les posts générés par l'IA, un par plateforme. */
@@ -44,4 +48,6 @@ export interface GenerateOptions {
   lang: "fr" | "en";
   /** Contexte produit optionnel fourni par l'utilisateur (pitch, audience…). */
   productContext?: string;
+  /** Hooks des posts précédents, pour éviter de répéter les mêmes angles. */
+  previousHooks?: string[];
 }

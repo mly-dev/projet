@@ -25,21 +25,26 @@ export function readXCredentials(): XCredentials | null {
 }
 
 /**
- * Publie un thread sur X : chaque tweet répond au précédent.
+ * Publie un thread sur X : chaque tweet répond au précédent. Un média
+ * (l'ID retourné par uploadMedia) peut être joint au premier tweet.
  * Retourne les IDs des tweets publiés (le premier est le hook).
  */
 export async function publishThread(
   tweets: string[],
   creds: XCredentials,
+  firstTweetMediaId?: string,
 ): Promise<string[]> {
   const url = "https://api.x.com/2/tweets";
   const ids: string[] = [];
   let replyTo: string | undefined;
 
   for (const text of tweets) {
-    const body = replyTo
+    const body: Record<string, unknown> = replyTo
       ? { text, reply: { in_reply_to_tweet_id: replyTo } }
       : { text };
+    if (!replyTo && firstTweetMediaId) {
+      body.media = { media_ids: [firstTweetMediaId] };
+    }
 
     const res = await fetch(url, {
       method: "POST",
@@ -68,9 +73,47 @@ export async function publishThread(
 }
 
 /**
+ * Téléverse une image PNG sur X et retourne son media_id, à joindre à un
+ * tweet. Essaie l'endpoint v2 puis retombe sur v1.1 si indisponible.
+ */
+export async function uploadMedia(
+  png: Buffer,
+  creds: XCredentials,
+): Promise<string> {
+  const attempt = async (url: string): Promise<Response> => {
+    const form = new FormData();
+    form.append("media", new Blob([new Uint8Array(png)], { type: "image/png" }), "chart.png");
+    form.append("media_category", "tweet_image");
+    return fetch(url, {
+      method: "POST",
+      headers: { Authorization: oauth1Header("POST", url, creds) },
+      body: form,
+    });
+  };
+
+  let res = await attempt("https://api.x.com/2/media/upload");
+  if (res.status === 404 || res.status === 400) {
+    res = await attempt("https://upload.twitter.com/1.1/media/upload.json");
+  }
+  if (!res.ok) {
+    throw new Error(`Erreur X media upload (${res.status}) : ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as {
+    data?: { id?: string; media_key?: string };
+    media_id_string?: string;
+  };
+  const id = data.data?.id ?? data.media_id_string;
+  if (!id) {
+    throw new Error("Réponse X media upload inattendue : identifiant du média absent.");
+  }
+  return id;
+}
+
+/**
  * Construit l'en-tête Authorization OAuth 1.0a (user context) exigé par
- * l'API X v2 pour poster. Le corps étant du JSON, seuls les paramètres
- * oauth_* entrent dans la signature.
+ * l'API X v2 pour poster. Le corps étant du JSON ou du multipart, seuls
+ * les paramètres oauth_* entrent dans la signature.
  */
 function oauth1Header(method: string, url: string, creds: XCredentials): string {
   const params: Record<string, string> = {

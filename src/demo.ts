@@ -41,6 +41,10 @@ export function demoActivity(days: number): Activity {
       { title: "Interviewer 3 beta testeurs", completedAt: day(3, 12) },
       { title: "Rédiger la page de vente", completedAt: day(5, 15) },
     ],
+    linearIssues: [
+      { title: "Corriger le bug de facturation au prorata", completedAt: day(2, 16) },
+    ],
+    plausible: { visitors: 412, pageviews: 1289 },
     stripe: {
       mrrCents: 84700, // 847 €/mois
       currency: "eur",

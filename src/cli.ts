@@ -6,10 +6,15 @@ import { loadDotEnv, readConfig } from "./config.js";
 import { fetchCommits } from "./collectors/github.js";
 import { fetchCompletedTasks } from "./collectors/notion.js";
 import { fetchStripeMetrics } from "./collectors/stripe.js";
+import { fetchCompletedIssues } from "./collectors/linear.js";
+import { fetchPlausibleStats } from "./collectors/plausible.js";
 import { buildProgressChart, buildRevenueChart } from "./chart.js";
 import { generatePosts, explainApiError } from "./generator.js";
 import { writeDrafts, findLatestDraftDir } from "./output.js";
-import { readXCredentials, publishThread } from "./publishers/x.js";
+import { loadRecentHooks, appendHook } from "./history.js";
+import { readXCredentials, publishThread, uploadMedia } from "./publishers/x.js";
+import { readLinkedInCredentials, publishLinkedInPost } from "./publishers/linkedin.js";
+import { svgToPng } from "./render.js";
 import { demoActivity } from "./demo.js";
 import type { Activity, GeneratedPosts, Platform } from "./types.js";
 
@@ -35,7 +40,9 @@ Options (generate) :
 
 Options (publish) :
   --dir <dossier>         Dossier de brouillons à publier (défaut : le plus récent)
+  --platforms <liste>     x,linkedin (défaut : x,linkedin,reddit — reddit ignoré)
   --yes                   Confirme la publication (sans ce flag : aperçu seul)
+                          Le graphique progression.svg est joint au premier tweet.
 
 Variables d'environnement (.env) :
   ANTHROPIC_API_KEY       Requis pour la génération des posts
@@ -46,8 +53,12 @@ Variables d'environnement (.env) :
   NOTION_STATUS_PROPERTY  Propriété de statut (défaut : Status)
   NOTION_DONE_VALUE       Valeur "terminé" (défaut : Done)
   STRIPE_SECRET_KEY       Optionnel (MRR + graphique de revenus)
+  LINEAR_API_KEY          Optionnel (issues Linear terminées)
+  PLAUSIBLE_API_KEY / PLAUSIBLE_SITE_ID
+                          Optionnels (trafic du site dans le storytelling)
   X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET
-                          Requis pour bip publish (developer.x.com)
+                          Requis pour publier sur X (developer.x.com)
+  LINKEDIN_ACCESS_TOKEN   Requis pour publier sur LinkedIn
 
 Exemples :
   bip generate --demo --skip-posts
@@ -84,7 +95,12 @@ async function main(): Promise<void> {
   const config = readConfig();
 
   if (command === "publish") {
-    await publishCommand(values.dir, values.out ?? "./output", values.yes ?? false);
+    await publishCommand(
+      values.dir,
+      values.out ?? "./output",
+      values.yes ?? false,
+      parsePlatforms(values.platforms ?? ""),
+    );
     return;
   }
 
@@ -137,14 +153,38 @@ async function main(): Promise<void> {
       notionTasks,
     };
 
+    // Sources bonus : chacune prévient en cas d'échec sans interrompre le flux.
     if (process.env.STRIPE_SECRET_KEY) {
       console.log("→ Lecture des métriques Stripe (MRR, revenus)…");
       try {
         activity.stripe =
           (await fetchStripeMetrics(since, process.env.STRIPE_SECRET_KEY)) ?? undefined;
       } catch (error) {
-        // Stripe est une source bonus : on prévient sans interrompre le flux.
         console.warn(`  ⚠ Stripe ignoré : ${error instanceof Error ? error.message : error}`);
+      }
+    }
+
+    if (process.env.LINEAR_API_KEY) {
+      console.log("→ Lecture des issues Linear terminées…");
+      try {
+        activity.linearIssues = await fetchCompletedIssues(since, process.env.LINEAR_API_KEY);
+        console.log(`  ${activity.linearIssues.length} issue(s) terminée(s)`);
+      } catch (error) {
+        console.warn(`  ⚠ Linear ignoré : ${error instanceof Error ? error.message : error}`);
+      }
+    }
+
+    if (process.env.PLAUSIBLE_API_KEY && process.env.PLAUSIBLE_SITE_ID) {
+      console.log("→ Lecture du trafic Plausible…");
+      try {
+        activity.plausible =
+          (await fetchPlausibleStats(since, until, {
+            apiKey: process.env.PLAUSIBLE_API_KEY,
+            siteId: process.env.PLAUSIBLE_SITE_ID,
+            apiUrl: process.env.PLAUSIBLE_API_URL,
+          })) ?? undefined;
+      } catch (error) {
+        console.warn(`  ⚠ Plausible ignoré : ${error instanceof Error ? error.message : error}`);
       }
     }
   }
@@ -154,7 +194,8 @@ async function main(): Promise<void> {
   const chartSvg = buildProgressChart(activity);
   const revenueSvg = buildRevenueChart(activity);
 
-  // 3. Storytelling par l'IA
+  // 3. Storytelling par l'IA (avec mémoire des hooks précédents)
+  const outDir = values.out ?? "./output";
   let posts = null;
   if (!skipPosts) {
     console.log("→ Rédaction des posts par Claude…");
@@ -163,21 +204,16 @@ async function main(): Promise<void> {
         platforms,
         lang,
         productContext: values.context,
+        previousHooks: loadRecentHooks(outDir),
       });
+      appendHook(outDir, posts.x_thread[0] ?? "");
     } catch (error) {
       fail(explainApiError(error));
     }
   }
 
   // 4. Écriture des brouillons
-  const dir = writeDrafts(
-    values.out ?? "./output",
-    activity,
-    posts,
-    platforms,
-    chartSvg,
-    revenueSvg,
-  );
+  const dir = writeDrafts(outDir, activity, posts, platforms, chartSvg, revenueSvg);
   console.log(`\n✓ Brouillons écrits dans ${dir}`);
   if (posts) {
     console.log(`  Aperçu du hook X : "${posts.x_thread[0]?.slice(0, 100) ?? ""}…"`);
@@ -187,14 +223,15 @@ async function main(): Promise<void> {
 }
 
 /**
- * Publie le thread X du dernier dossier de brouillons (ou de --dir).
- * Sans --yes, affiche un aperçu et s'arrête — la publication est une
- * action irréversible, elle exige une confirmation explicite.
+ * Publie les brouillons du dernier dossier (ou de --dir) sur X et/ou
+ * LinkedIn. Sans --yes, affiche un aperçu et s'arrête — la publication est
+ * une action irréversible, elle exige une confirmation explicite.
  */
 async function publishCommand(
   dirArg: string | undefined,
   outDir: string,
   confirmed: boolean,
+  platforms: Platform[],
 ): Promise<void> {
   const dir = dirArg ?? findLatestDraftDir(outDir);
   if (!dir || !fs.existsSync(path.join(dir, "posts.json"))) {
@@ -205,14 +242,21 @@ async function publishCommand(
     fs.readFileSync(path.join(dir, "posts.json"), "utf8"),
   ) as GeneratedPosts;
 
-  console.log(`Thread X à publier (${dir}) :\n`);
-  posts.x_thread.forEach((tweet, i) => {
-    console.log(`  ${i + 1}/${posts.x_thread.length} ${tweet}\n`);
-  });
+  const doX = platforms.includes("x");
+  const doLinkedIn = platforms.includes("linkedin");
 
-  const tooLong = posts.x_thread.filter((t) => t.length > 280);
-  if (tooLong.length > 0) {
-    fail(`${tooLong.length} tweet(s) dépassent 280 caractères. Corrigez posts.json avant de publier.`);
+  if (doX) {
+    console.log(`Thread X à publier (${dir}) :\n`);
+    posts.x_thread.forEach((tweet, i) => {
+      console.log(`  ${i + 1}/${posts.x_thread.length} ${tweet}\n`);
+    });
+    const tooLong = posts.x_thread.filter((t) => t.length > 280);
+    if (tooLong.length > 0) {
+      fail(`${tooLong.length} tweet(s) dépassent 280 caractères. Corrigez posts.json avant de publier.`);
+    }
+  }
+  if (doLinkedIn) {
+    console.log(`Post LinkedIn à publier :\n\n${posts.linkedin}\n`);
   }
 
   if (!confirmed) {
@@ -220,20 +264,46 @@ async function publishCommand(
     return;
   }
 
-  const creds = readXCredentials();
-  if (!creds) {
-    fail(
-      "Identifiants X manquants. Définissez X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN et X_ACCESS_SECRET dans votre .env (developer.x.com, accès Read and write).",
-    );
+  if (doX) {
+    const creds = readXCredentials();
+    if (!creds) {
+      fail(
+        "Identifiants X manquants. Définissez X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN et X_ACCESS_SECRET dans votre .env (developer.x.com, accès Read and write).",
+      );
+    }
+
+    // Pièce jointe : le graphique de progression, converti en PNG
+    let mediaId: string | undefined;
+    const chartPath = path.join(dir, "progression.svg");
+    if (fs.existsSync(chartPath)) {
+      try {
+        console.log("→ Upload du graphique en pièce jointe…");
+        const png = svgToPng(fs.readFileSync(chartPath, "utf8"));
+        mediaId = await uploadMedia(png, creds);
+      } catch (error) {
+        console.warn(
+          `  ⚠ Pièce jointe ignorée : ${error instanceof Error ? error.message : error}`,
+        );
+      }
+    }
+
+    console.log("→ Publication du thread sur X…");
+    const ids = await publishThread(posts.x_thread, creds, mediaId);
+    console.log(`✓ Thread publié (${ids.length} tweets${mediaId ? " + graphique" : ""}).`);
+    console.log(`  https://x.com/i/status/${ids[0]}`);
   }
 
-  console.log("→ Publication du thread sur X…");
-  const ids = await publishThread(posts.x_thread, creds);
-  console.log(`\n✓ Thread publié (${ids.length} tweets).`);
-  console.log(`  https://x.com/i/status/${ids[0]}`);
-  console.log(
-    "\nAstuce : joignez le graphique (progression.svg) au premier tweet depuis l'app X — l'upload d'images arrive dans une prochaine version.",
-  );
+  if (doLinkedIn) {
+    const liCreds = readLinkedInCredentials();
+    if (!liCreds) {
+      fail(
+        "Identifiants LinkedIn manquants. Définissez LINKEDIN_ACCESS_TOKEN (scopes openid + w_member_social) dans votre .env.",
+      );
+    }
+    console.log("→ Publication du post sur LinkedIn…");
+    const postId = await publishLinkedInPost(posts.linkedin, liCreds);
+    console.log(`✓ Post LinkedIn publié (${postId}).`);
+  }
 }
 
 function parsePlatforms(raw: string): Platform[] {

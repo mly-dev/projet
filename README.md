@@ -11,10 +11,13 @@ racontez une histoire, laissez le produit se vendre.
 ## Comment ça marche
 
 ```
-GitHub (commits) ─┐
-Notion (tâches) ──┼─→ Claude (storytelling) ─→ x-thread.md / linkedin.md / reddit.md
-Stripe (MRR) ─────┘                        ├─→ progression.svg (commits par jour)
-                                           └─→ revenus.svg (encaissements + MRR)
+GitHub (commits) ───┐
+Notion (tâches) ────┤
+Linear (issues) ────┼─→ Claude (storytelling) ─→ x-thread.md / linkedin.md / reddit.md
+Stripe (MRR) ───────┤                        ├─→ progression.svg (commits/jour + streak)
+Plausible (trafic) ─┘                        └─→ revenus.svg (encaissements + MRR)
+
+bip publish ─→ X (thread + graphique en pièce jointe) et LinkedIn
 ```
 
 1. **Collecte** — les commits du dépôt sur la période (GitHub API) et les tâches
@@ -79,7 +82,10 @@ npm run dev -- publish --yes
 | `NOTION_STATUS_PROPERTY` | Nom de la propriété de statut (défaut `Status`) |
 | `NOTION_DONE_VALUE` | Valeur "terminé" (défaut `Done`) — propriétés `status`, `select` ou `checkbox` supportées |
 | `STRIPE_SECRET_KEY` | Optionnel — MRR dans le storytelling + graphique `revenus.svg` |
-| `X_API_KEY` `X_API_SECRET` `X_ACCESS_TOKEN` `X_ACCESS_SECRET` | Requis pour `bip publish` — app developer.x.com avec accès "Read and write" (OAuth 1.0a) |
+| `LINEAR_API_KEY` | Optionnel — issues Linear terminées dans le storytelling |
+| `PLAUSIBLE_API_KEY` `PLAUSIBLE_SITE_ID` | Optionnels — trafic du site dans le storytelling (`PLAUSIBLE_API_URL` pour le self-hosted) |
+| `X_API_KEY` `X_API_SECRET` `X_ACCESS_TOKEN` `X_ACCESS_SECRET` | Publication X — app developer.x.com avec accès "Read and write" (OAuth 1.0a) |
+| `LINKEDIN_ACCESS_TOKEN` | Publication LinkedIn — token avec scopes `openid` + `w_member_social` (`LINKEDIN_AUTHOR_URN` optionnel) |
 
 ## Ce que produit une exécution
 
@@ -123,11 +129,14 @@ L'IA suit des règles strictes pour éviter le contenu générique :
 - [x] Publication directe sur X (`bip publish`)
 - [x] Mode cron : un post automatique chaque vendredi (GitHub Actions)
 - [x] Source Stripe : MRR + graphique des encaissements
-- [ ] Upload du graphique en pièce jointe du tweet (media upload)
-- [ ] Publication LinkedIn
-- [ ] Sources supplémentaires : Linear, Plausible (trafic)
-- [ ] Graphique streak de jours consécutifs
-- [ ] Mémoire des posts précédents pour éviter les répétitions
+- [x] Upload du graphique en pièce jointe du premier tweet
+- [x] Publication LinkedIn (`bip publish --platforms linkedin`)
+- [x] Sources Linear (issues terminées) et Plausible (trafic)
+- [x] Streak de jours de code consécutifs sur le graphique
+- [x] Mémoire des hooks précédents pour éviter les répétitions (`output/history.json`)
+
+Idées suivantes : publication Reddit, file d'attente multi-comptes,
+détection automatique du meilleur horaire de publication.
 
 ## Licence
 

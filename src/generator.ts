@@ -95,12 +95,34 @@ function buildUserPrompt(activity: Activity, opts: GenerateOptions): string {
     .map((t) => `- ${t.completedAt.slice(0, 10)} ${t.title}`)
     .join("\n");
 
-  let metricsBlock = "";
+  const metrics: string[] = [];
   if (activity.stripe) {
     const { mrrCents, currency, revenueByDay } = activity.stripe;
     const totalCents = revenueByDay.reduce((s, d) => s + d.amountCents, 0);
-    metricsBlock = `\nMétriques (Stripe) : MRR actuel ${formatAmount(mrrCents, currency)}/mois ; ${formatAmount(totalCents, currency)} encaissés sur la période. La transparence sur les chiffres est au cœur du build in public : intègre-les naturellement dans l'histoire.\n`;
+    metrics.push(
+      `Stripe : MRR actuel ${formatAmount(mrrCents, currency)}/mois ; ${formatAmount(totalCents, currency)} encaissés sur la période.`,
+    );
   }
+  if (activity.plausible) {
+    metrics.push(
+      `Trafic (Plausible) : ${activity.plausible.visitors} visiteurs, ${activity.plausible.pageviews} pages vues sur la période.`,
+    );
+  }
+  const metricsBlock =
+    metrics.length > 0
+      ? `\nMétriques :\n${metrics.map((m) => `- ${m}`).join("\n")}\nLa transparence sur les chiffres est au cœur du build in public : intègre-les naturellement dans l'histoire.\n`
+      : "";
+
+  const linearLines = (activity.linearIssues ?? [])
+    .map((t) => `- ${t.completedAt.slice(0, 10)} ${t.title}`)
+    .join("\n");
+  const linearBlock = linearLines
+    ? `\nIssues Linear terminées (${activity.linearIssues?.length}) :\n${linearLines}\n`
+    : "";
+
+  const hooksBlock = opts.previousHooks?.length
+    ? `\nHooks déjà utilisés récemment — trouve un angle DIFFÉRENT :\n${opts.previousHooks.map((h) => `- "${h}"`).join("\n")}\n`
+    : "";
 
   return `Projet : ${activity.projectName} (dépôt ${activity.repo})
 Période : du ${activity.since.slice(0, 10)} au ${activity.until.slice(0, 10)}
@@ -111,7 +133,7 @@ ${commitLines || "(aucun)"}
 
 Tâches Notion terminées (${activity.notionTasks.length}) :
 ${taskLines || "(aucune)"}
-
+${linearBlock}${hooksBlock}
 Rédige les posts pour X, LinkedIn et Reddit à partir de cette activité. Un graphique de progression (commits par jour) sera joint aux posts : tu peux y faire référence ("le graphique ci-dessous") sans le décrire en détail.`;
 }
 

@@ -28,11 +28,18 @@ export function buildProgressChart(activity: Activity): string {
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  const tasksDone = activity.notionTasks.length;
-  const subtitle2 =
-    tasksDone > 0
-      ? `+ ${tasksDone} tâche${tasksDone > 1 ? "s" : ""} Notion terminée${tasksDone > 1 ? "s" : ""}`
-      : "";
+  const tasksDone = activity.notionTasks.length + (activity.linearIssues?.length ?? 0);
+  const streak = computeStreak(counts);
+  const parts: string[] = [];
+  if (tasksDone > 0) {
+    parts.push(`+ ${tasksDone} tâche${tasksDone > 1 ? "s" : ""} terminée${tasksDone > 1 ? "s" : ""}`);
+  }
+  // Pas d'emoji ici : les convertisseurs SVG→PNG retombent sur une police
+  // de repli qui casse le rendu de toute la ligne.
+  if (streak >= 2) {
+    parts.push(`${streak} jours de code d'affilée`);
+  }
+  const subtitle2 = parts.join("   ·   ");
 
   return renderBarChart({
     hero: `${total} commit${total > 1 ? "s" : ""}`,
@@ -150,6 +157,24 @@ function renderBarChart(spec: BarChartSpec): string {
   <text x="${WIDTH - PLOT.right}" y="${HEIGHT - 24}" text-anchor="end" fill="${INK_MUTED}" font-size="16">#buildinpublic</text>
 </svg>
 `;
+}
+
+/**
+ * Streak : nombre de jours consécutifs avec au moins un commit, en
+ * remontant depuis le jour du dernier commit.
+ */
+export function computeStreak(countsByDay: Map<string, number>): number {
+  const activeDays = [...countsByDay.keys()].sort();
+  const last = activeDays.at(-1);
+  if (!last) return 0;
+
+  let streak = 0;
+  const cursor = new Date(`${last}T00:00:00Z`);
+  while (countsByDay.has(cursor.toISOString().slice(0, 10))) {
+    streak++;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return streak;
 }
 
 /** Construit un seau par jour de la période, valeurs manquantes à 0. */
