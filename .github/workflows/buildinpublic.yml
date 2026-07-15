@@ -1,0 +1,75 @@
+# Mode cron : chaque vendredi à 9h UTC, bip collecte la semaine écoulée,
+# rédige les brouillons et les dépose en artefact. Si les identifiants X
+# sont configurés dans les secrets du dépôt, le thread est publié directement.
+#
+# Secrets à définir (Settings → Secrets and variables → Actions) :
+#   ANTHROPIC_API_KEY   requis
+#   NOTION_TOKEN / NOTION_DATABASE_ID          optionnels
+#   STRIPE_SECRET_KEY                          optionnel
+#   LINEAR_API_KEY                             optionnel
+#   PLAUSIBLE_API_KEY / PLAUSIBLE_SITE_ID      optionnels
+#   X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET
+#                                              optionnels (publication X auto)
+#   LINKEDIN_ACCESS_TOKEN                      optionnel (publication LinkedIn auto)
+name: Build in Public hebdo
+
+on:
+  schedule:
+    - cron: "0 9 * * 5" # vendredi 9h UTC
+  workflow_dispatch: # lancement manuel pour tester
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Générer les brouillons
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPO: ${{ github.repository }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          PLAUSIBLE_API_KEY: ${{ secrets.PLAUSIBLE_API_KEY }}
+          PLAUSIBLE_SITE_ID: ${{ secrets.PLAUSIBLE_SITE_ID }}
+        run: node dist/cli.js generate --days 7 --lang fr
+
+      - name: Déposer les brouillons en artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: brouillons-build-in-public
+          path: output/
+          retention-days: 30
+
+      - name: Publier (X et/ou LinkedIn, si configurés)
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
+        run: |
+          if [ -n "$X_API_KEY" ]; then
+            node dist/cli.js publish --yes --platforms x
+          fi
+          if [ -n "$LINKEDIN_ACCESS_TOKEN" ]; then
+            node dist/cli.js publish --yes --platforms linkedin
+          fi
+          if [ -z "$X_API_KEY" ] && [ -z "$LINKEDIN_ACCESS_TOKEN" ]; then
+            echo "Aucun identifiant de publication : les brouillons sont dans l'artefact."
+          fi
