@@ -69,10 +69,21 @@ Trois entrées possibles selon le besoin : **exploiter le service au quotidien**
 ## Démarrer le MVP en local
 
 ```bash
+# Récupérer le projet (le travail est sur une branche, pas sur main)
+git clone -b claude/kayna-kayna-pay-presentation-gp4lgf \
+  https://github.com/mly-dev/projet.git
+cd projet/kayna-kayna-pay
+
+# La plateforme
 cd plateforme && npm install && npm run db:migrer && npm run db:seed && npm run dev
-# puis, dans un autre terminal :
-cd mobile && npm install && EXPO_PUBLIC_API_URL=http://<ip-locale>:3000 npx expo start
+
+# puis, dans un autre terminal, l'application mobile
+cd mobile && npm install && cp .env.example .env   # indiquez-y votre IP locale
+npx expo start
 ```
+
+**➜ Première fois ? Suivez [`docs/guide-essai.md`](docs/guide-essai.md)** : le
+parcours guidé de bout en bout, avec les pièges et les problèmes courants.
 
 Espace admin : http://localhost:3000 (`+22790000010` / `admin123`, puis le code
 de connexion affiché dans les journaux du serveur — les comptes d'administration

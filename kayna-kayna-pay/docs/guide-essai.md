@@ -11,7 +11,7 @@ n'est nécessaire : à ce stade, on simule.
 
 ## Ce qu'il vous faut
 
-- Un ordinateur avec **Node 18 ou plus** et **PostgreSQL** installés.
+- Un ordinateur avec **git**, **Node 18 ou plus** et **PostgreSQL** installés.
 - Un téléphone **Android** avec l'application **Expo Go** (gratuite, Play Store).
 - **Le téléphone et l'ordinateur sur le même réseau Wi-Fi.** C'est la condition
   la plus souvent oubliée : sans cela, rien ne fonctionnera.
@@ -22,12 +22,49 @@ n'est nécessaire : à ce stade, on simule.
 
 ---
 
-## Étape 1 — Démarrer la plateforme
+## Étape 0 — Récupérer le projet
 
-Dans un premier terminal :
+Le projet vit sur le dépôt **`mly-dev/projet`**, dans la branche
+**`claude/kayna-kayna-pay-presentation-gp4lgf`**.
 
 ```bash
-cd kayna-kayna-pay/plateforme
+git clone -b claude/kayna-kayna-pay-presentation-gp4lgf \
+  https://github.com/mly-dev/projet.git
+
+cd projet/kayna-kayna-pay
+```
+
+> ⚠️ **N'oubliez pas l'option `-b`** : le travail est sur une branche, pas sur
+> `main`. Un clone sans cette option vous donnerait un dépôt sans le dossier
+> `kayna-kayna-pay/`.
+
+Si le dépôt est privé, git vous demandera vos identifiants GitHub (ou utilisez
+la version SSH : `git clone -b claude/kayna-kayna-pay-presentation-gp4lgf
+git@github.com:mly-dev/projet.git`).
+
+**Vérifiez que vous avez bien tout** :
+
+```bash
+ls
+# docs  identite  mobile  pitch  plateforme  README.md
+```
+
+Si vous avez déjà cloné le dépôt auparavant, mettez-le simplement à jour :
+
+```bash
+git fetch origin claude/kayna-kayna-pay-presentation-gp4lgf
+git checkout claude/kayna-kayna-pay-presentation-gp4lgf
+git pull origin claude/kayna-kayna-pay-presentation-gp4lgf
+```
+
+---
+
+## Étape 1 — Démarrer la plateforme
+
+Dans un premier terminal, **depuis le dossier `kayna-kayna-pay`** :
+
+```bash
+cd plateforme
 
 # Base de données (une seule fois)
 sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;" \
@@ -80,10 +117,11 @@ votre pare-feu qui bloque le port 3000 — autorisez-le avant de continuer.
 
 ## Étape 3 — Lancer l'application
 
-Dans un **deuxième terminal** :
+Dans un **deuxième terminal** (le premier continue de faire tourner la
+plateforme), toujours depuis le dossier `kayna-kayna-pay` :
 
 ```bash
-cd kayna-kayna-pay/mobile
+cd mobile
 npm install
 
 # Indiquez l'adresse trouvée à l'étape 2
