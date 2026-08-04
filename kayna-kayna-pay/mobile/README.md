@@ -11,11 +11,18 @@ Prérequis : Node 18+, l'application **Expo Go** sur votre téléphone
 
 ```bash
 npm install
-
-# Sur téléphone : remplacez par l'adresse IP locale de votre machine
-# (téléphone et machine sur le même réseau Wi-Fi).
-EXPO_PUBLIC_API_URL=http://192.168.1.10:3000 npx expo start
+cp .env.example .env    # puis indiquez-y l'adresse IP locale de votre machine
+npx expo start
 ```
+
+> **`localhost` ne marche pas depuis un téléphone** : il faut l'adresse IP
+> locale de la machine qui fait tourner la plateforme, téléphone et machine
+> étant sur le même réseau Wi-Fi. `.env.example` explique comment la trouver
+> sur chaque système.
+
+**➜ Pour un essai guidé de bout en bout, suivez
+[`docs/guide-essai.md`](../docs/guide-essai.md)** : le parcours complet, du
+compte créé au versement validé en temps réel, avec les problèmes courants.
 
 Scannez le QR code avec Expo Go. Compte client de démonstration :
 `+22791111111` / `client123` — ou créez un compte : le code OTP s'affiche
