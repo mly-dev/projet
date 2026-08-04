@@ -9,9 +9,9 @@ temps réel. Montants en francs CFA entiers.
 Prérequis : Node 18+, PostgreSQL.
 
 ```bash
-# 1. Base de données
-sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;" \
-                      -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+# 1. Base de données (sous Windows : psql -U postgres -c "…", même commandes)
+sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
 
 # 2. Configuration
 cp .env.example .env    # ajustez DATABASE_URL et JWT_SECRET

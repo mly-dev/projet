@@ -20,6 +20,19 @@ n'est nécessaire : à ce stade, on simule.
 > sont pas forcément sur le même réseau. Dans le doute, mettez l'ordinateur en
 > Wi-Fi sur le même réseau que le téléphone.
 
+### Si vous êtes sous Windows
+
+Les commandes de ce guide fonctionnent dans **PowerShell**, à deux réserves
+près :
+
+- **Tapez chaque commande sur une seule ligne.** Une commande longue coupée en
+  deux avec `\` en fin de ligne est une convention Linux : PowerShell ne la
+  comprend pas et vous obtiendrez
+  `fatal: repository '\' does not exist`. (Le caractère de continuation de
+  PowerShell est l'accent grave `` ` ``, mais le plus simple reste une seule
+  ligne.)
+- **La création de la base de données diffère** — voir l'étape 1.
+
 ---
 
 ## Étape 0 — Récupérer le projet
@@ -27,10 +40,13 @@ n'est nécessaire : à ce stade, on simule.
 Le projet vit sur le dépôt **`mly-dev/projet`**, dans la branche
 **`claude/kayna-kayna-pay-presentation-gp4lgf`**.
 
-```bash
-git clone -b claude/kayna-kayna-pay-presentation-gp4lgf \
-  https://github.com/mly-dev/projet.git
+**Tapez la commande de clonage sur une seule ligne**, sans la couper :
 
+```bash
+git clone -b claude/kayna-kayna-pay-presentation-gp4lgf https://github.com/mly-dev/projet.git
+```
+
+```bash
 cd projet/kayna-kayna-pay
 ```
 
@@ -38,9 +54,12 @@ cd projet/kayna-kayna-pay
 > `main`. Un clone sans cette option vous donnerait un dépôt sans le dossier
 > `kayna-kayna-pay/`.
 
-Si le dépôt est privé, git vous demandera vos identifiants GitHub (ou utilisez
-la version SSH : `git clone -b claude/kayna-kayna-pay-presentation-gp4lgf
-git@github.com:mly-dev/projet.git`).
+Si le dépôt est privé, git vous demandera vos identifiants GitHub. Avec une clé
+SSH configurée, utilisez plutôt :
+
+```bash
+git clone -b claude/kayna-kayna-pay-presentation-gp4lgf git@github.com:mly-dev/projet.git
+```
 
 **Vérifiez que vous avez bien tout** :
 
@@ -65,11 +84,33 @@ Dans un premier terminal, **depuis le dossier `kayna-kayna-pay`** :
 
 ```bash
 cd plateforme
+```
 
-# Base de données (une seule fois)
-sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;" \
-                      -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+**Créez la base de données** (une seule fois). Chaque commande tient sur une
+ligne.
 
+*Sous Windows (PowerShell)* — le mot de passe demandé est celui du compte
+`postgres` choisi à l'installation de PostgreSQL :
+
+```powershell
+psql -U postgres -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
+psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+```
+
+> Si PowerShell répond que `psql` n'est pas reconnu, l'outil n'est pas dans le
+> PATH. Ajoutez-le pour la session en cours (adaptez le numéro de version) :
+> `$env:Path += ";C:\Program Files\PostgreSQL\16\bin"`
+
+*Sous Linux ou macOS* :
+
+```bash
+sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+```
+
+**Puis, sur tous les systèmes** :
+
+```bash
 cp .env.example .env
 npm install
 npm run db:migrer
@@ -265,6 +306,9 @@ sur le détail de l'achat). Après validation par l'admin :
 | « Session de connexion expirée » côté admin | Plus de 10 min entre mot de passe et code | Recommencez la connexion |
 | L'application affiche un écran blanc | Erreur JavaScript | Secouez le téléphone → « Reload » ; regardez le terminal Expo |
 | Rien n'apparaît dans la file admin | Vous n'avez pas appuyé sur « J'ai effectué le dépôt » | Le versement reste « initié » tant que le dépôt n'est pas déclaré |
+| `fatal: repository '\' does not exist` | Commande coupée en deux lignes dans PowerShell | Retapez-la **sur une seule ligne** |
+| `psql : terme non reconnu` (Windows) | PostgreSQL absent du PATH | `$env:Path += ";C:\Program Files\PostgreSQL\16\bin"` |
+| `password authentication failed for user "kkp"` | Base créée avec un autre mot de passe | Vérifiez `DATABASE_URL` dans `plateforme/.env` |
 
 ### Tester sur un émulateur plutôt qu'un téléphone
 

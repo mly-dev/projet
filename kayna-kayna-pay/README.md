@@ -69,9 +69,9 @@ Trois entrées possibles selon le besoin : **exploiter le service au quotidien**
 ## Démarrer le MVP en local
 
 ```bash
-# Récupérer le projet (le travail est sur une branche, pas sur main)
-git clone -b claude/kayna-kayna-pay-presentation-gp4lgf \
-  https://github.com/mly-dev/projet.git
+# Récupérer le projet (le travail est sur une branche, pas sur main).
+# Une seule ligne — sous Windows, PowerShell ne comprend pas les coupures « \ ».
+git clone -b claude/kayna-kayna-pay-presentation-gp4lgf https://github.com/mly-dev/projet.git
 cd projet/kayna-kayna-pay
 
 # La plateforme
