@@ -30,8 +30,9 @@ a { color: var(--bleu); text-decoration: none; }
   padding: 20px 14px;
   flex-shrink: 0;
 }
-.lateral .marque { font-weight: 800; font-size: 17px; letter-spacing: 0.5px; margin-bottom: 4px; }
-.lateral .devise { font-size: 11.5px; color: #b9cde2; font-style: italic; margin-bottom: 24px; }
+.lateral .bloc-marque { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+.lateral .marque { font-weight: 800; font-size: 14.5px; letter-spacing: 0.3px; line-height: 1.2; }
+.lateral .devise { font-size: 11px; color: #b9cde2; font-style: italic; margin-top: 2px; }
 .lateral nav a {
   display: block;
   color: #dbe8f5;
@@ -104,6 +105,7 @@ label { font-size: 12.5px; color: var(--gris); display: block; margin: 10px 0 4p
   background: var(--bleu-fonce);
 }
 .connexion-boite { background: #fff; border-radius: 14px; padding: 30px 32px; width: 360px; }
+.connexion-boite .logo-connexion { display: block; margin: 0 auto 14px; }
 .connexion-boite .marque { color: var(--bleu-fonce); font-weight: 800; font-size: 20px; text-align: center; }
 .connexion-boite .devise { color: var(--gris); font-size: 12.5px; text-align: center; font-style: italic; margin-bottom: 18px; }
 

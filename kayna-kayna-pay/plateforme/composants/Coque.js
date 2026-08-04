@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { utilisateur, jeton, deconnexion } from "../client/api";
+import { utilisateur, deconnexion } from "../client/api";
 
 const LIENS_ADMIN = [
   ["/admin/file", "File de validation"],
@@ -20,9 +20,11 @@ export default function Coque({ espace, titre, sousTitre, children }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Garde d'affichage uniquement : la session réelle vit dans le cookie
+    // httpOnly et chaque route de l'API revérifie le rôle côté serveur.
     const u = utilisateur();
     const rolesAttendus = espace === "admin" ? ["admin", "superadmin"] : ["partenaire"];
-    if (!jeton() || !u || !rolesAttendus.includes(u.role)) {
+    if (!u || !rolesAttendus.includes(u.role)) {
       router.replace("/");
       return;
     }
@@ -36,8 +38,13 @@ export default function Coque({ espace, titre, sousTitre, children }) {
   return (
     <div className="coque">
       <aside className="lateral">
-        <div className="marque">KAYNA KAYNA PAY</div>
-        <div className="devise">Petit à petit, paye</div>
+        <div className="bloc-marque">
+          <img src="/logo-marque-fond-sombre.svg" alt="" width={34} height={34} />
+          <div>
+            <div className="marque">KAYNA KAYNA PAY</div>
+            <div className="devise">Petit à petit, paye</div>
+          </div>
+        </div>
         <nav>
           {liens.map(([href, libelle]) => (
             <Link key={href} href={href} className={router.pathname === href ? "actif" : ""}>

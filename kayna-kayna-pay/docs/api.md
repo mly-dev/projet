@@ -23,16 +23,24 @@ subdivision) — jamais de décimales, jamais de chaînes.
 { "ok": false, "erreur": "Le versement minimum est de 100 F." }
 ```
 
-**Authentification** : jeton JWT dans l'en-tête, obtenu à la connexion ou à la
-vérification OTP.
+**Authentification** — deux transports, selon le client :
 
-```
-Authorization: Bearer <jeton>
-```
+| Client | Transport | Obtenu par |
+|---|---|---|
+| Application mobile | en-tête `Authorization: Bearer <jeton>` | `jeton` renvoyé dans le corps |
+| Espaces web (admin, partenaire) | **cookie `kkp_jeton` httpOnly** | posé par le serveur quand la requête porte `espace_web: true` |
 
 Durée de validité : 24 h par défaut (`JWT_DUREE`). Le jeton porte l'identifiant
 et le rôle ; le rôle est **revérifié en base à chaque requête**, si bien que la
 suspension d'un compte prend effet immédiatement, sans attendre l'expiration.
+
+Le cookie est `HttpOnly` (illisible par le JavaScript de la page, donc à l'abri
+d'une faille XSS), `SameSite=Strict` (protection CSRF) et `Secure` en
+production. Avec ce mode, **le jeton n'apparaît jamais dans le corps de la
+réponse** : le navigateur le joint seul aux requêtes de même origine.
+
+**Deuxième facteur** : les comptes `admin` et `superadmin` ne peuvent pas ouvrir
+de session avec le seul mot de passe — voir §1.
 
 **Codes HTTP** :
 
@@ -57,6 +65,7 @@ des contenus sont publiques (rôle « visiteur » du cahier des charges §3).
 | Route | Limite |
 |---|---|
 | `/api/auth/connexion` | 15 tentatives / 15 min |
+| `/api/auth/connexion-2fa` | 10 / 15 min |
 | `/api/auth/inscription` | 10 / heure |
 | `/api/auth/verifier-otp` | 20 / heure |
 | `/api/auth/reinitialiser` | 10 / heure |
@@ -112,17 +121,61 @@ Erreurs : `400` code invalide ou expiré (validité 10 minutes, usage unique) ;
 
 ### `POST /api/auth/connexion` — public
 
-| Champ | Type | Obligatoire |
-|---|---|---|
-| `telephone` | string | oui |
-| `mot_de_passe` | string | oui |
+| Champ | Type | Obligatoire | Note |
+|---|---|---|---|
+| `telephone` | string | oui | |
+| `mot_de_passe` | string | oui | |
+| `espace_web` | bool | non | `true` → le jeton part en cookie httpOnly au lieu du corps |
 
-Réponse identique à `verifier-otp`.
+**Client ou partenaire** — réponse identique à `verifier-otp` (ou, avec
+`espace_web`, `{ ok: true, utilisateur }` et le cookie posé).
+
+**Administrateur ou super-administrateur** — aucune session n'est ouverte : un
+code est envoyé par SMS et la réponse ne contient **pas** de jeton de session.
+
+```jsonc
+// 200
+{
+  "ok": true,
+  "second_facteur": true,
+  "jeton_temporaire": "eyJhbGciOiJIUzI1NiIs…",
+  "message": "Un code de connexion vous a été envoyé par SMS."
+}
+```
+
+> `jeton_temporaire` **n'ouvre aucune session** : il atteste seulement que
+> l'étape mot de passe a réussi, vaut 10 minutes, et est rejeté par toutes les
+> routes protégées (401). Il ne sert qu'à `connexion-2fa`.
 
 Erreurs : `401` identifiants incorrects (message volontairement identique que le
 numéro existe ou non) ; `403` compte suspendu ; `403` numéro non vérifié — la
 réponse porte alors `verification_requise: true` pour que l'application propose
 de reprendre l'inscription.
+
+### `POST /api/auth/connexion-2fa` — public
+
+Deuxième facteur des comptes d'administration (cahier des charges §10).
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `jeton_temporaire` | string | oui — celui renvoyé par `connexion` |
+| `code` | string | oui — 6 chiffres reçus par SMS |
+| `espace_web` | bool | non |
+
+Deux preuves sont exigées : le jeton temporaire **et** le code. Connaître le
+seul code ne suffit donc pas à ouvrir une session, et connaître le seul mot de
+passe non plus.
+
+Réponse : jeton + utilisateur (ou cookie + utilisateur avec `espace_web`).
+
+Erreurs : `400` code invalide ou expiré (tracé au journal d'audit),
+`400` jeton de connexion invalide, `401` jeton temporaire expiré (au-delà de
+10 minutes), `403` compte indisponible.
+
+### `POST /api/auth/deconnexion` — public
+
+Efface le cookie de session des espaces web. Sans effet pour le mobile, qui se
+contente d'oublier son jeton localement.
 
 ### `POST /api/auth/mot-de-passe-oublie` — public
 
@@ -516,7 +569,9 @@ Les 300 dernières entrées du journal d'audit, avec le nom de l'auteur.
 Actions tracées : `versement.valide`, `versement.rejete`, `achat.<action>`,
 `utilisateur.statut`, `produit.cree`, `produit.modifie`, `categorie.creee`,
 `categorie.modifiee`, `partenaire.cree`, `parametre.modifie`,
-`campagne.envoyee`, `achat.annulation_demandee`, `compte.supprime`.
+`campagne.envoyee`, `achat.annulation_demandee`, `compte.supprime`,
+`connexion.second_facteur_envoye`, `connexion.second_facteur_echec`,
+`connexion.reussie`.
 
 ---
 
@@ -552,12 +607,18 @@ Connexion au même hôte que l'API, **jeton obligatoire** à la poignée de main
 
 ```js
 import { io } from "socket.io-client";
+
+// Application mobile : jeton explicite
 const socket = io("http://localhost:3000", { auth: { jeton: "<jeton>" } });
+
+// Espaces web : le cookie httpOnly suffit, la page n'a aucun jeton à fournir
+const socket = io({ withCredentials: true });
 ```
 
-Un jeton absent ou invalide fait échouer la connexion. À la connexion, le
-serveur inscrit automatiquement le client dans ses salons : `user:<id>` pour
-tous, plus `admins` pour les rôles `admin` et `superadmin`.
+Un jeton absent, invalide, ou de simple étape intermédiaire (`2fa`) fait échouer
+la connexion. À la connexion, le serveur inscrit automatiquement le client dans
+ses salons : `user:<id>` pour tous, plus `admins` pour les rôles `admin` et
+`superadmin`.
 
 | Événement | Reçu par | Charge utile |
 |---|---|---|

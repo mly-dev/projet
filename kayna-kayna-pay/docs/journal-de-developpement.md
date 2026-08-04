@@ -42,6 +42,33 @@ Production des livrables documentaires du chapitre 11 qui manquaient :
 `api.md`, `schema-donnees.md`, `exploitation.md`, `backend.md`, et le présent
 journal.
 
+### Août 2026 — Identité visuelle et durcissement
+
+**Logo et charte** (`identite/`) : création du logo — un anneau segmenté dont
+chaque segment est un versement, les bleus déjà effectués, l'ambre celui du
+jour, les clairs ce qu'il reste. Déclinaisons produites par script
+(`generer-logo.js`) : icône d'application, icône adaptative Android, écran de
+démarrage, favicon, versions pour fond clair et fond sombre. Charte graphique
+documentée (couleurs, typographie, ton, usages à éviter), logo intégré à
+l'application mobile et aux deux espaces web.
+
+**Durcissement avant production**, trois chantiers :
+
+- **Migrations versionnées** — `db/migrations/` et un exécuteur maison
+  (`scripts/migrer.js`) : application unique, transactionnelle, empreinte
+  enregistrée, refus des migrations modifiées après coup, reconnaissance
+  automatique des bases antérieures.
+- **Double authentification des administrateurs** (§10) — mot de passe puis code
+  SMS. Le jeton délivré après le mot de passe porte `etape: "2fa"` et est rejeté
+  par toutes les routes protégées et par le socket : les deux preuves sont
+  nécessaires.
+- **Cookie de session httpOnly** pour les espaces web — le jeton quitte
+  `localStorage` pour un cookie `HttpOnly` + `SameSite=Strict` (+ `Secure` en
+  production), inaccessible au JavaScript de la page. Vérifié en conditions
+  réelles : `document.cookie` est vide dans le navigateur.
+
+Le test de bout en bout passe de 20 à **25 critères**, tous verts.
+
 ---
 
 ## Ce qui a été construit
@@ -146,6 +173,25 @@ et les états — précisément ce que des tests unitaires avec base simulée ne
 voient pas. Les tests unitaires deviendront utiles quand la logique de calcul se
 complexifiera (frais d'annulation, arrondis).
 
+### Le deuxième facteur repose sur deux preuves, pas une
+
+Après le mot de passe, le serveur délivre un jeton `etape: "2fa"` valable
+10 minutes, exigé en plus du code SMS.
+
+**Pourquoi** : sans lui, quelqu'un connaissant le seul numéro d'un
+administrateur pourrait tenter de deviner le code à 6 chiffres. Avec lui, il
+faut avoir déjà franchi l'étape mot de passe. La fonction
+`verifierJetonSession()` refuse ce jeton partout ailleurs — c'est la pièce qui
+empêche le premier facteur de valoir session à lui seul.
+
+### Un exécuteur de migrations maison plutôt qu'un outil externe
+
+**Pourquoi** : une centaine de lignes sans dépendance, qui font exactement ce
+dont le projet a besoin (application unique, transaction, empreinte, baseline
+d'une base existante). Ajouter une dépendance de migration aurait apporté des
+fonctions inutilisées et une surface de mise à jour supplémentaire, pour un
+schéma de treize tables.
+
 ### JavaScript sans TypeScript
 
 **Pourquoi** : choix explicite du cahier des charges (§9.1) pour l'application
@@ -171,7 +217,7 @@ Signalés pour éviter qu'ils passent pour des oublis.
 | §4.2 — photos des produits | Champ `photos` présent, **pas d'upload** | Stockage objet non branché ; sans impact sur le parcours de versement, cœur du MVP |
 | §9.1 — notifications push FCM | Interface prête, **journalisation** au lieu d'envoi | Nécessite un projet Firebase et des jetons d'appareil |
 | §9.1 — passerelle SMS locale | Fournisseur `console` en développement | La passerelle nigérienne reste à sélectionner et contractualiser |
-| §10 — double authentification admin | **Non implémentée** | Listée dans la checklist avant production |
+| §10 — double authentification admin | **Implémentée** (mot de passe + code SMS) | — |
 | §4.5 — langues locales | Français uniquement | Conforme : « français au lancement, architecture prévue pour l'ajout ultérieur » |
 
 ---
@@ -227,7 +273,7 @@ réelle, des numéros de dépôt de production et des dépôts authentiques.
 | Espace web partenaire et administrateur | ✅ Développés (partenaire en consultation) |
 | API backend **documentée** | ✅ Code + [`api.md`](api.md) |
 | Base de données avec **schéma documenté** | ✅ `db/schema.sql` + [`schema-donnees.md`](schema-donnees.md) |
-| Charte graphique appliquée | ✅ Bleu/blanc sur l'application, les espaces web et le deck — **logo à créer** |
+| Charte graphique appliquée | ✅ Logo créé et intégré partout, charte documentée ([`identite/`](../identite/README.md)) |
 | CGU et politique de confidentialité intégrées | 🔶 Intégrées mais **projets de texte non validés** |
 | Documentation d'exploitation | ✅ [`exploitation.md`](exploitation.md) |
 
@@ -235,11 +281,13 @@ réelle, des numéros de dépôt de production et des dépôts authentiques.
 
 ## Suite immédiate
 
-1. Arbitrer les règles « à définir » (§6) — elles bloquent la rédaction finale des CGU.
-2. Engager la consultation juridique BCEAO/UEMOA.
-3. Lancer l'application mobile sur un vrai téléphone et corriger ce qui apparaîtra.
-4. Créer le logo, finaliser l'identité visuelle.
-5. Sélectionner et brancher la passerelle SMS locale.
+1. **Lancer l'application mobile sur un vrai téléphone** — jamais fait, tout le
+   reste en dépend.
+2. Arbitrer les règles « à définir » (§6) — elles bloquent la rédaction finale des CGU.
+3. Engager la consultation juridique BCEAO/UEMOA.
+4. Sélectionner et brancher la passerelle SMS locale — elle conditionne
+   désormais aussi la connexion des administrateurs.
+5. Photos de produits (upload et affichage) — le manque fonctionnel le plus visible.
 6. Déployer la plateforme (hébergement, HTTPS, sauvegardes testées).
 7. Signer les premiers partenaires pilotes, pitch deck à l'appui.
 8. Phase 2 : pilote restreint avec de vrais dépôts de faible montant.

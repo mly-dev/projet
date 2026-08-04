@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import Coque from "../../composants/Coque";
-import { api, jeton, fcfa } from "../../client/api";
+import { api, fcfa } from "../../client/api";
 
 const LIBELLES = { en_attente: "En attente", en_verification: "En vérification", valide: "Validés", rejete: "Rejetés" };
 
@@ -24,7 +24,8 @@ export default function FileValidation() {
 
   useEffect(() => {
     api("/api/admin/stats").then((r) => r.ok && setStats(r.stats));
-    const socket = io({ auth: { jeton: jeton() } });
+    // Le cookie de session httpOnly est joint automatiquement à la poignée de main.
+    const socket = io({ withCredentials: true });
     socketRef.current = socket;
     socket.on("file:nouveau", (v) => {
       setVersements((actuels) =>

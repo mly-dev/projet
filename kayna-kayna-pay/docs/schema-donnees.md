@@ -1,8 +1,8 @@
 # Kayna Kayna Pay — Schéma de la base de données
 
 Livrable « base de données avec schéma documenté » (cahier des charges §11).
-Le schéma exécutable est `plateforme/db/schema.sql` ; ce document explique ce
-que chaque table représente et **pourquoi** elle est faite ainsi.
+Le schéma exécutable vit dans `plateforme/db/migrations/` ; ce document explique
+ce que chaque table représente et **pourquoi** elle est faite ainsi.
 
 ## Principes structurants
 
@@ -87,7 +87,7 @@ envoyé avant même que le compte soit vérifié.
 |---|---|---|
 | `telephone` | varchar(20) | |
 | `code` | varchar(6) | |
-| `usage` | text | `inscription` ou `reinitialisation` — un code d'inscription ne peut pas servir à réinitialiser un mot de passe |
+| `usage` | text | `inscription`, `reinitialisation` ou `connexion` (deuxième facteur administrateur) — cloisonnés : un code d'inscription ne peut pas servir à réinitialiser un mot de passe |
 | `expire_le` | timestamptz | 10 minutes après l'émission |
 | `utilise` | bool | **usage unique** : consommé à la vérification |
 
@@ -284,14 +284,38 @@ Les opérations financières s'exécutent dans une transaction (`tx()` de
 
 ## Migrations
 
-`npm run db:migrer` applique `db/schema.sql`, écrit intégralement en
-`CREATE … IF NOT EXISTS` : la commande est **idempotente** et sans effet sur une
-base déjà à jour.
+Le schéma évolue par **migrations versionnées**, dans `db/migrations/`, nommées
+`NNN_description.sql` et appliquées dans l'ordre.
 
-Le MVP n'a pas d'outil de migration incrémentale (pas de versionnage de schéma).
-Avant la Phase 2, prévoir un outil de migration versionnée
-(`node-pg-migrate` ou équivalent) : une fois des données réelles en production,
-modifier une colonne ne pourra plus se faire par simple relecture du fichier.
+```bash
+npm run db:migrer            # applique les migrations en attente
+npm run db:migrer -- --etat  # affiche l'état sans rien appliquer
+```
+
+| Migration | Contenu |
+|---|---|
+| `001_schema_initial.sql` | Schéma complet du MVP |
+| `002_otp_connexion.sql` | Usage `connexion` des codes OTP (deuxième facteur administrateur) |
+
+Fonctionnement (`scripts/migrer.js`) :
+
+- chaque migration s'exécute **une seule fois**, dans une **transaction** — en
+  cas d'erreur, rien n'est écrit et l'exécution s'arrête ;
+- son nom et l'**empreinte** de son contenu sont enregistrés dans
+  `schema_migrations` ;
+- **modifier une migration déjà appliquée est détecté et refusé** : la base et le
+  dépôt ne diraient plus la même chose. Il faut créer une nouvelle migration ;
+- une base antérieure à ce dispositif (tables déjà présentes, table
+  `schema_migrations` absente) est **reconnue automatiquement** : la migration
+  initiale y est marquée appliquée sans être rejouée.
+
+### `schema_migrations`
+
+| Colonne | Type | Note |
+|---|---|---|
+| `fichier` | text (PK) | nom du fichier de migration |
+| `empreinte` | text | SHA-256 tronqué du contenu appliqué |
+| `applique_le` | timestamptz | |
 
 ## Sauvegardes
 

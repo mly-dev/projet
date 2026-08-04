@@ -5,17 +5,22 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icone.png",
     "splash": {
+      "image": "./assets/logo-marque-blanc.png",
+      "resizeMode": "contain",
       "backgroundColor": "#003A70"
     },
     "android": {
       "package": "ne.kaynakaynapay.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icone-adaptative.png",
         "backgroundColor": "#005CA9"
       }
     },
     "ios": {
-      "bundleIdentifier": "ne.kaynakaynapay.app"
+      "bundleIdentifier": "ne.kaynakaynapay.app",
+      "supportsTablet": false
     }
   }
 }

@@ -16,9 +16,9 @@ sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;" \
 # 2. Configuration
 cp .env.example .env    # ajustez DATABASE_URL et JWT_SECRET
 
-# 3. Installation, schéma, données de démonstration
+# 3. Installation, migrations, données de démonstration
 npm install
-npm run db:migrer
+npm run db:migrer            # applique les migrations en attente
 npm run db:seed
 
 # 4. Serveur (Next.js + Socket.io) — http://localhost:3000
@@ -37,18 +37,25 @@ Comptes de démonstration (seed) :
 En développement, les SMS (codes OTP) s'affichent dans les journaux du
 serveur (`SMS_FOURNISSEUR=console`).
 
+> **Les comptes d'administration exigent un deuxième facteur** : après le mot de
+> passe, un code est envoyé par SMS. En développement, relevez-le dans les
+> journaux du serveur (ligne `[SMS → +227…]`).
+
 ## Test de bout en bout
 
 Le script `npm run smoke` (serveur démarré) déroule le parcours complet —
 inscription OTP, achat, versement, validation admin en temps réel, minuteur
 expiré, rejet, complétion, intégrité comptable, contrôle d'accès — et vérifie
-un à un les critères d'acceptation du chapitre 13 du cahier des charges.
+un à un les critères d'acceptation du chapitre 13 du cahier des charges, plus
+les garanties de sécurité (deuxième facteur administrateur, cookie de session
+httpOnly). **25 critères, tous verts.**
 
 ## Architecture
 
 ```
 server.js            Serveur HTTP : Next.js + Socket.io + balayage du minuteur
-db/schema.sql        Schéma PostgreSQL (versements immuables, transitions journalisées)
+db/migrations/       Migrations versionnées (versements immuables, transitions journalisées)
+public/              Favicon et logo des espaces web
 lib/
   versements.js      Machine à états : initié → en attente → validé/rejeté/en vérification
   achats.js          Démarrage d'achat (prix figé), portefeuilles, annulation
@@ -79,8 +86,8 @@ Principes tenus (cahier des charges §9.2) :
 
 ## Durcissement avant production
 
-- `JWT_SECRET` fort, HTTPS obligatoire, cookies httpOnly pour les espaces web,
-  double facteur administrateurs (prévu au cahier des charges).
+- `JWT_SECRET` fort et HTTPS obligatoire (le cookie de session passe
+  automatiquement en `Secure` quand `NODE_ENV=production`).
 - Passerelle SMS réelle dans `lib/sms/`, FCM réel dans `lib/push.js`.
 - Limitation de débit partagée (Redis) si plusieurs instances.
 - Sauvegardes quotidiennes chiffrées de la base.

@@ -75,7 +75,8 @@ setInterval(() => {
 ```
 plateforme/
 ├── server.js              Next.js + Socket.io + tâche de fond
-├── db/schema.sql          Schéma (idempotent)
+├── db/migrations/         Migrations versionnées, appliquées une seule fois
+├── public/                Favicon et logo des espaces web
 ├── lib/                   ── LOGIQUE MÉTIER (le cœur) ──
 │   ├── db.js              Pool, query(), tx(), paramètres
 │   ├── auth.js            JWT, bcrypt, garde de rôle, normalisation téléphone
@@ -140,15 +141,39 @@ n'interpolent **que des noms de colonnes fixes**, jamais des entrées utilisateu
 
 ```js
 utilisateurRequis(req, res, roles = [])  // → user | null (répond 401/403 lui-même)
-signerJeton(user) / verifierJeton(token)
+signerJeton(user) / verifierJetonSession(token)
+signerJetonTemporaire(user)              // étape intermédiaire du deuxième facteur
+exigeDoubleFacteur(role)                 // vrai pour admin et superadmin
+poserCookieSession(res, jeton) / effacerCookieSession(res)
+jetonDeLaRequete(req) / jetonDuCookieBrut(enteteCookie)
 hacherMotDePasse(mdp) / comparerMotDePasse(mdp, hash)   // bcrypt, coût 10
 normaliserTelephone(tel)  // "90 00 00 00" → "+22790000000" | null
 ```
 
 `utilisateurRequis` est la garde utilisée par **toutes** les routes protégées.
-Elle fait plus que décoder le jeton : elle **relit l'utilisateur en base** et
-vérifie son statut. Conséquence voulue — suspendre un compte le coupe
-immédiatement, sans attendre l'expiration du jeton.
+Elle fait plus que décoder le jeton : elle prend le jeton **de l'en-tête
+`Authorization` (mobile) ou du cookie httpOnly (web)**, puis **relit
+l'utilisateur en base** et vérifie son statut. Conséquence voulue — suspendre un
+compte le coupe immédiatement, sans attendre l'expiration du jeton.
+
+**Deux natures de jeton, à ne jamais confondre :**
+
+| | Contenu | Durée | Ouvre une session ? |
+|---|---|---|---|
+| Jeton de session | `{ uid, role }` | 24 h | oui |
+| Jeton temporaire | `{ uid, role, etape: "2fa" }` | 10 min | **non** |
+
+`verifierJetonSession()` **rejette tout jeton portant `etape`**. C'est la pièce
+critique du deuxième facteur : sans elle, le jeton délivré après le seul mot de
+passe vaudrait session et le second facteur ne servirait à rien. Elle est
+utilisée par `utilisateurRequis` **et** par la poignée de main Socket.io — les
+deux seules portes d'entrée.
+
+**Le cookie de session** (`poserCookieSession`) porte `HttpOnly` (invisible au
+JavaScript de la page, donc hors de portée d'une faille XSS), `SameSite=Strict`
+(protection CSRF, sans jeton anti-CSRF à gérer) et `Secure` en production. Les
+espaces web n'ont ainsi **aucun identifiant de session en `localStorage`** :
+seul le profil d'affichage (nom, rôle) y est conservé.
 
 Le motif d'appel est toujours le même, et la sortie anticipée est essentielle :
 
@@ -328,6 +353,8 @@ Ce que le code applique aujourd'hui (cahier des charges §10) :
 | Jetons à durée limitée | JWT, 24 h par défaut (`JWT_DUREE`) |
 | Contrôle d'accès par rôle **sur chaque route** | `utilisateurRequis(req, res, [rôles])`, rôle **relu en base** |
 | Espace admin inaccessible depuis le mobile | routes `/api/admin/*` fermées aux rôles `client`/`partenaire` ; l'application refuse aussi la connexion d'un non-client |
+| **Double authentification des administrateurs** | mot de passe puis code SMS ; le jeton intermédiaire n'ouvre aucune session |
+| **Session web hors de portée du JavaScript** | cookie `HttpOnly` + `SameSite=Strict` (+ `Secure` en production) |
 | Journal d'audit | `auditer()` sur validations, rejets, remboursements, suspensions, paramètres |
 | Anti-abus connexion et OTP | `garde()` sur les cinq routes d'authentification |
 | Validation systématique côté serveur | chaque route vérifie types et règles — le client n'est jamais cru sur parole |
@@ -344,9 +371,7 @@ Détails moins visibles mais volontaires :
 - **Socket authentifié** à la poignée de main, salons cloisonnés par utilisateur.
 
 **Restant à faire avant la production** (voir aussi `exploitation.md` §7) :
-`JWT_SECRET` fort, HTTPS partout, double authentification des administrateurs,
-jetons en cookie `httpOnly` pour les espaces web (aujourd'hui `localStorage`,
-donc exposés à une faille XSS), limitation de débit partagée.
+`JWT_SECRET` fort, HTTPS partout, limitation de débit partagée entre instances.
 
 ---
 
@@ -398,9 +423,27 @@ export default async function handler(req, res) {
 
 ### Ajouter un état de versement
 
-Modifier `TRANSITIONS` **et** la contrainte `CHECK` de la colonne `statut` dans
-`db/schema.sql`. Les deux doivent rester d'accord : la contrainte est le filet de
-sécurité si le code se trompe.
+Modifier `TRANSITIONS` **et** la contrainte `CHECK` de la colonne `statut`, cette
+dernière par une **nouvelle migration**. Les deux doivent rester d'accord : la
+contrainte est le filet de sécurité si le code se trompe.
+
+### Faire évoluer le schéma
+
+```bash
+# 1. créer db/migrations/00N_description.sql
+# 2. vérifier ce qui est en attente
+npm run db:migrer -- --etat
+# 3. appliquer
+npm run db:migrer
+```
+
+Chaque migration s'exécute une seule fois, dans une transaction, et son
+empreinte est enregistrée. **Ne jamais modifier une migration déjà appliquée** :
+l'exécuteur le détecte et refuse de continuer, parce que la base et le dépôt ne
+diraient plus la même chose. Créez-en une nouvelle.
+
+Une base antérieure à l'introduction des migrations est reconnue automatiquement
+et `001_schema_initial.sql` y est marqué appliqué sans être rejoué.
 
 ### Brancher la vraie passerelle SMS
 
@@ -418,8 +461,6 @@ Listée ici pour être traitée en connaissance de cause, pas découverte plus t
 | `global._io` pour l'accès au socket | couplage discret entre `lib` et le serveur ; gênant pour tester `notifier()` isolément | à l'introduction de tests unitaires |
 | Limitation de débit en mémoire | limite multipliée par le nombre d'instances | avant la mise à l'échelle (Phase 3) |
 | `setInterval` dans le processus | balayage dupliqué en multi-instances (sans double crédit) | même échéance |
-| Jetons en `localStorage` (espaces web) | exposés à une faille XSS | avant la production |
-| Pas de migrations versionnées | `schema.sql` seul ne sait pas faire évoluer une base contenant des données réelles | **avant la Phase 2 (pilote)** |
 | Pas de pagination | listes plafonnées (100–300 lignes) | quand les volumes grimperont |
 | Pas de tests unitaires | seul le test de bout en bout couvre le système | en continu |
 
@@ -435,7 +476,12 @@ réel, minuteur expiré puis validation tardive, rejet motivé, complétion avec
 notification du client et du partenaire, récapitulatif, **égalité du solde et
 des écritures**, et contrôle d'accès par rôle.
 
-État actuel : **20 critères validés, 0 en échec.**
+S'y ajoutent les critères de sécurité : le deuxième facteur administrateur (le
+mot de passe seul ne délivre pas de session, le jeton intermédiaire est rejeté
+par les routes protégées, un code erroné est refusé) et le cookie de session web
+(`HttpOnly`, `SameSite=Strict`, aucun jeton dans le corps de la réponse).
+
+État actuel : **25 critères validés, 0 en échec.**
 
 C'est volontairement un test d'intégration plutôt qu'une batterie de tests
 unitaires : sur un système dont les risques sont la concurrence, les

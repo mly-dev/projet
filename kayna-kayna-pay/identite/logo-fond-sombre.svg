@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 140" width="620" height="140" role="img" aria-label="Kayna Kayna Pay — petit à petit, paye">
+  <g transform="translate(0, 10)">
+    <path d="M 54.85 16.81 A 43.5 43.5 0 0 1 65.15 16.81"
+      fill="none" stroke="#005CA9" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 86.90 25.81 A 43.5 43.5 0 0 1 94.19 33.10"
+      fill="none" stroke="#005CA9" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 103.19 54.85 A 43.5 43.5 0 0 1 103.19 65.15"
+      fill="none" stroke="#005CA9" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 94.19 86.90 A 43.5 43.5 0 0 1 86.90 94.19"
+      fill="none" stroke="#005CA9" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 65.15 103.19 A 43.5 43.5 0 0 1 54.85 103.19"
+      fill="none" stroke="#005CA9" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 33.10 94.19 A 43.5 43.5 0 0 1 25.81 86.90"
+      fill="none" stroke="#F2A900" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 16.81 65.15 A 43.5 43.5 0 0 1 16.81 54.85"
+      fill="none" stroke="#FFFFFF33" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 25.81 33.10 A 43.5 43.5 0 0 1 33.10 25.81"
+      fill="none" stroke="#FFFFFF33" stroke-width="17" stroke-linecap="round"/>
+    <circle cx="60" cy="60" r="22" fill="#FFFFFF"/>
+  </g>
+  <text x="148" y="63" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif" font-size="40" font-weight="bold"
+        letter-spacing="1.5" fill="#FFFFFF">KAYNA KAYNA PAY</text>
+  <text x="150" y="97" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif" font-size="20" font-style="italic"
+        fill="#B9CDE2">« Petit à petit, paye »</text>
+</svg>

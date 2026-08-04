@@ -28,7 +28,25 @@ async function api(chemin, options = {}, jeton) {
     },
     body: options.corps ? JSON.stringify(options.corps) : undefined,
   });
-  return { statut: res.status, corps: await res.json() };
+  return { statut: res.status, corps: await res.json(), entetes: res.headers };
+}
+
+// Connexion d'un administrateur : mot de passe, puis code SMS (deuxième
+// facteur). Renvoie le jeton de session et les constats intermédiaires.
+async function connexionAdmin(telephone, motDePasse) {
+  const etape1 = await api("/api/auth/connexion", {
+    method: "POST",
+    corps: { telephone, mot_de_passe: motDePasse },
+  });
+  const r = await query(
+    "SELECT code FROM otp_codes WHERE telephone = $1 AND usage = 'connexion' ORDER BY id DESC LIMIT 1",
+    [telephone]
+  );
+  const etape2 = await api("/api/auth/connexion-2fa", {
+    method: "POST",
+    corps: { jeton_temporaire: etape1.corps.jeton_temporaire, code: r.rows[0] && r.rows[0].code },
+  });
+  return { etape1, etape2, jeton: etape2.corps.jeton };
 }
 
 function attendre(ms) {
@@ -75,11 +93,37 @@ async function principal() {
   );
 
   // ── Connexions socket : client (notifications) et admin (file) ────────────
-  const connAdmin = await api("/api/auth/connexion", {
+  const { etape1, etape2, jeton: jetonAdmin } = await connexionAdmin("+22790000010", "admin123");
+  critere(
+    "La connexion administrateur exige un deuxième facteur (aucun jeton au mot de passe seul)",
+    etape1.corps.second_facteur === true && !etape1.corps.jeton && Boolean(etape1.corps.jeton_temporaire)
+  );
+  const avecJetonTemporaire = await api("/api/admin/versements", {}, etape1.corps.jeton_temporaire);
+  critere(
+    "Le jeton intermédiaire n'ouvre aucune session",
+    avecJetonTemporaire.statut === 401
+  );
+  critere("Le code SMS ouvre la session administrateur", Boolean(jetonAdmin) && etape2.corps.ok === true);
+
+  const mauvaisCode = await api("/api/auth/connexion-2fa", {
     method: "POST",
-    corps: { telephone: "+22790000010", mot_de_passe: "admin123" },
+    corps: { jeton_temporaire: etape1.corps.jeton_temporaire, code: "000000" },
   });
-  const jetonAdmin = connAdmin.corps.jeton;
+  critere("Un code de connexion erroné est refusé", mauvaisCode.statut === 400);
+
+  // Espaces web : le jeton part en cookie httpOnly, jamais dans le corps
+  const connexionWeb = await api("/api/auth/connexion", {
+    method: "POST",
+    corps: { telephone: "+22792000001", mot_de_passe: "partenaire123", espace_web: true },
+  });
+  const cookie = connexionWeb.entetes.get("set-cookie") || "";
+  critere(
+    "L'espace web reçoit un cookie httpOnly SameSite et aucun jeton dans la réponse",
+    !connexionWeb.corps.jeton &&
+      /kkp_jeton=/.test(cookie) &&
+      /HttpOnly/i.test(cookie) &&
+      /SameSite=Strict/i.test(cookie)
+  );
 
   const evenements = { client: [], admin: [] };
   const socketClient = io(BASE, { auth: { jeton: jetonClient }, transports: ["websocket"] });

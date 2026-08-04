@@ -3,7 +3,7 @@ require("dotenv").config();
 const http = require("http");
 const next = require("next");
 const { Server } = require("socket.io");
-const { verifierJeton } = require("./lib/auth");
+const { verifierJetonSession, jetonDuCookieBrut } = require("./lib/auth");
 const { balayerMinuteurs } = require("./lib/versements");
 
 const dev = process.env.NODE_ENV !== "production";
@@ -17,13 +17,17 @@ app.prepare().then(() => {
   const io = new Server(serveur, { cors: { origin: "*" } });
   global._io = io;
 
-  // Authentification des sockets par jeton ; salons par utilisateur + salon
-  // « admins » pour la file de validation en temps réel.
+  // Authentification des sockets ; salons par utilisateur + salon « admins »
+  // pour la file de validation en temps réel. Le jeton vient de la poignée de
+  // main (application mobile) ou du cookie httpOnly (espaces web) — dans ce
+  // dernier cas le navigateur l'envoie seul, la page ne peut pas le lire.
   io.use((socket, suivant) => {
     try {
-      const token = socket.handshake.auth && socket.handshake.auth.jeton;
+      const token =
+        (socket.handshake.auth && socket.handshake.auth.jeton) ||
+        jetonDuCookieBrut(socket.handshake.headers.cookie);
       if (!token) return suivant(new Error("Jeton requis."));
-      socket.donnees = verifierJeton(token);
+      socket.donnees = verifierJetonSession(token);
       suivant();
     } catch (e) {
       suivant(new Error("Jeton invalide."));
