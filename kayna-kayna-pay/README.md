@@ -12,10 +12,7 @@ le montant total atteint.
 
 ```
 kayna-kayna-pay/
-├── docs/
-│   ├── presentation.md          Document de présentation du projet (vue d'ensemble, non technique)
-│   ├── cahier-des-charges.md    Cahier des charges fonctionnel et technique v1.0
-│   └── originaux/               Versions Word de référence des deux documents
+├── docs/                        Documentation du projet (voir l'index ci-dessous)
 ├── pitch/
 │   ├── Kayna_Kayna_Pay_Pitch_Deck.pptx   Présentation de pitch (13 diapositives, modifiable)
 │   └── Kayna_Kayna_Pay_Pitch_Deck.pdf    La même, en PDF (partage WhatsApp / impression)
@@ -29,6 +26,25 @@ Le pitch deck reprend fidèlement le contenu du document de présentation, aux
 couleurs de la marque (bleu Ecobank et blanc), pour les rendez-vous avec les
 partenaires pilotes, institutions et investisseurs. Les montants qui y
 figurent en illustration (exemple de prix, maquette d'écran) sont fictifs.
+
+## Documentation
+
+| Document | Pour qui | Contenu |
+|---|---|---|
+| [`docs/presentation.md`](docs/presentation.md) | tous | Le projet dans son ensemble, sans technique |
+| [`docs/cahier-des-charges.md`](docs/cahier-des-charges.md) | tous | Exigences fonctionnelles et techniques v1.0 — **la référence** |
+| [`docs/exploitation.md`](docs/exploitation.md) | **équipe d'exploitation** | Procédure de validation des versements, gestion des litiges, sauvegardes, surveillance |
+| [`docs/backend.md`](docs/backend.md) | développeurs | Architecture du serveur, modules, parcours de versement, sécurité, recettes de développement |
+| [`docs/api.md`](docs/api.md) | développeurs | Référence des 33 routes de l'API, temps réel, codes d'erreur |
+| [`docs/schema-donnees.md`](docs/schema-donnees.md) | développeurs | Tables, relations, invariants financiers, transactions |
+| [`docs/journal-de-developpement.md`](docs/journal-de-developpement.md) | tous | Ce qui a été construit, décisions et leurs raisons, écarts assumés, points de vigilance |
+| [`plateforme/README.md`](plateforme/README.md) | développeurs | Installation et démarrage de la plateforme |
+| [`mobile/README.md`](mobile/README.md) | développeurs | Installation et démarrage de l'application mobile |
+| `docs/originaux/` | archives | Versions Word de référence des deux documents fondateurs |
+
+Trois entrées possibles selon le besoin : **exploiter le service au quotidien**
+→ `exploitation.md` ; **reprendre le code** → `backend.md`, puis `api.md` et
+`schema-donnees.md` ; **comprendre les choix faits** → `journal-de-developpement.md`.
 
 ## État du projet
 

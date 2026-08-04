@@ -1,7 +1,7 @@
 // Données de démonstration : paramètres, contenus, catégories, comptes,
 // partenaires et produits d'exemple (prix indicatifs en F CFA).
 require("dotenv").config();
-const { pool, query, setParametre } = require("../lib/db");
+const { pool, query, setParametre, getParametre } = require("../lib/db");
 const { hacherMotDePasse } = require("../lib/auth");
 
 async function upsertUser(telephone, nom, mdp, role) {
@@ -86,9 +86,12 @@ async function principal() {
     }
   }
 
-  // Produits d'exemple — prix partenaire en F CFA ; prix affiché = +5 %,
-  // arrondi aux 5 F supérieurs (même règle que l'API admin).
-  const prixAffiche = (p) => Math.ceil((p * 1.05) / 5) * 5;
+  // Produits d'exemple — prix partenaire en F CFA. Le prix affiché suit la même
+  // règle que l'API admin : prix partenaire + commission, arrondi aux 5 F
+  // supérieurs. Le taux est relu depuis les paramètres pour que le seed ne
+  // diverge pas si la commission change.
+  const commission = Number(await getParametre("commission_pct", 5));
+  const prixAffiche = (p) => Math.ceil((p * (1 + commission / 100)) / 5) * 5;
   const produits = [
     ["Sahel Électronique", "telephonie", "Téléphone Tecno Spark (128 Go)", "Écran 6,6\", 128 Go, double SIM, garantie 12 mois.", 78000, true],
     ["Sahel Électronique", "telephonie", "Téléphone Itel A50", "Simple et robuste, idéal premier smartphone.", 42000, false],
