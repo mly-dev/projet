@@ -19,7 +19,7 @@ Compléments : [`api.md`](api.md) pour le contrat des routes,
 | Langage | **JavaScript** (sans TypeScript) | cohérent avec le choix fait pour l'application mobile |
 | Auth | **JWT** + bcrypt | API sans état, un même jeton pour les trois clients |
 
-Environ 650 lignes de logique métier dans `lib/`, plus 33 routes fines. La règle
+Environ 650 lignes de logique métier dans `lib/`, plus 36 routes fines. La règle
 implicite : **les routes ne contiennent pas de métier**, elles valident les
 entrées, appellent un module, et formatent la réponse.
 
@@ -38,9 +38,12 @@ n'importe qui écouterait les notifications de n'importe qui.
 
 ```js
 io.use((socket, suivant) => {
-  const token = socket.handshake.auth && socket.handshake.auth.jeton;
+  // Jeton explicite (mobile) ou cookie httpOnly joint par le navigateur (web)
+  const token =
+    (socket.handshake.auth && socket.handshake.auth.jeton) ||
+    jetonDuCookieBrut(socket.handshake.headers.cookie);
   if (!token) return suivant(new Error("Jeton requis."));
-  socket.donnees = verifierJeton(token);   // lève si invalide
+  socket.donnees = verifierJetonSession(token);  // rejette aussi un jeton d'étape 2fa
   suivant();
 });
 

@@ -1,0 +1,1788 @@
+<title>Comprendre Kayna Kayna Pay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+
+<style>
+  /* ---------- Jetons : palette claire complète ---------- */
+  :root {
+    --fond:        #FAFCFE;
+    --surface:     #FFFFFF;
+    --surface-2:   #EDF3F9;
+    --surface-3:   #E1EBF5;
+    --bord:        #D7E3EE;
+    --bord-fort:   #B9CCDE;
+    --encre:       #15283A;
+    --encre-2:     #53687C;
+    --bleu:        #005CA9;
+    --bleu-fort:   #003A70;
+    --ambre:       #F2A900;
+    --ambre-texte: #9A6C00;
+    --ambre-fond:  #FFF6E2;
+    --vert:        #1B7A38;
+    --vert-fond:   #E4F3E8;
+    --rouge:       #B3241F;
+    --rouge-fond:  #FCEAE9;
+    --code-fond:   #F2F6FA;
+    --ombre:       0 1px 2px rgba(21, 40, 58, .05), 0 8px 24px -16px rgba(21, 40, 58, .18);
+
+    --lecture: 68ch;
+    --pas: 1.6rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fond:        #0B1520;
+      --surface:     #12212F;
+      --surface-2:   #17293A;
+      --surface-3:   #1E3346;
+      --bord:        #263B51;
+      --bord-fort:   #37506B;
+      --encre:       #E7EFF7;
+      --encre-2:     #9CB2C7;
+      --bleu:        #56A5E4;
+      --bleu-fort:   #9BCBEE;
+      --ambre:       #F2A900;
+      --ambre-texte: #F0B93F;
+      --ambre-fond:  #2E2410;
+      --vert:        #63CC85;
+      --vert-fond:   #14301D;
+      --rouge:       #FF8F89;
+      --rouge-fond:  #33191A;
+      --code-fond:   #0E1C28;
+      --ombre:       0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --fond:        #0B1520;
+    --surface:     #12212F;
+    --surface-2:   #17293A;
+    --surface-3:   #1E3346;
+    --bord:        #263B51;
+    --bord-fort:   #37506B;
+    --encre:       #E7EFF7;
+    --encre-2:     #9CB2C7;
+    --bleu:        #56A5E4;
+    --bleu-fort:   #9BCBEE;
+    --ambre:       #F2A900;
+    --ambre-texte: #F0B93F;
+    --ambre-fond:  #2E2410;
+    --vert:        #63CC85;
+    --vert-fond:   #14301D;
+    --rouge:       #FF8F89;
+    --rouge-fond:  #33191A;
+    --code-fond:   #0E1C28;
+    --ombre:       0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--encre);
+    font-family: Newsreader, Georgia, "Times New Roman", serif;
+    font-size: 19px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Charpente ---------- */
+  .page { display: grid; grid-template-columns: 1fr; }
+
+  @media (min-width: 1080px) {
+    .page {
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 0;
+      align-items: start;
+    }
+  }
+
+  /* ---------- Sommaire ---------- */
+  .sommaire {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--bord);
+    padding: 1.2rem 1.4rem;
+  }
+  @media (min-width: 1080px) {
+    .sommaire {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-bottom: none;
+      border-right: 1px solid var(--bord);
+      padding: 2.4rem 1.6rem 2.4rem 2.2rem;
+    }
+  }
+
+  .sommaire .marque {
+    display: flex; align-items: center; gap: .65rem;
+    margin-bottom: 1.6rem;
+  }
+  .sommaire .marque-nom {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-weight: 700; font-size: .82rem; letter-spacing: .06em;
+    color: var(--bleu-fort); line-height: 1.25;
+  }
+  .sommaire .marque-sous {
+    font-size: .74rem; color: var(--encre-2); font-style: italic;
+  }
+
+  .sommaire ol { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .sommaire li { counter-increment: s; }
+  .sommaire a {
+    display: grid; grid-template-columns: 1.9rem 1fr; gap: .2rem;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .83rem; line-height: 1.35;
+    color: var(--encre-2); text-decoration: none;
+    padding: .42rem .5rem .42rem 0; border-radius: 6px;
+  }
+  .sommaire a::before {
+    content: counter(s, decimal-leading-zero);
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem;
+    color: var(--bord-fort); font-variant-numeric: tabular-nums;
+  }
+  .sommaire a:hover { color: var(--bleu); }
+  .sommaire a:hover::before { color: var(--bleu); }
+  .sommaire a:focus-visible { outline: 2px solid var(--bleu); outline-offset: 2px; }
+
+  .sommaire-mobile { display: block; }
+  .sommaire-mobile > summary {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-weight: 600; font-size: .88rem; cursor: pointer; color: var(--bleu-fort);
+  }
+  @media (min-width: 1080px) {
+    .sommaire-mobile > summary { display: none; }
+    .sommaire-mobile { display: contents; }
+  }
+
+  /* ---------- Corps ---------- */
+  main { padding: 2.4rem 1.3rem 6rem; min-width: 0; }
+  @media (min-width: 720px)  { main { padding: 3.4rem 2.6rem 7rem; } }
+  @media (min-width: 1080px) { main { padding: 4.2rem 3.4rem 8rem; } }
+
+  .bloc { max-width: var(--lecture); }
+  section { max-width: var(--lecture); margin-bottom: 4.2rem; scroll-margin-top: 1.5rem; }
+
+  /* ---------- Titres ---------- */
+  h1, h2, h3, h4 {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    text-wrap: balance; margin: 0;
+  }
+  h1 {
+    font-size: clamp(2.1rem, 5.2vw, 3.05rem);
+    font-weight: 700; letter-spacing: -.028em; line-height: 1.08;
+    color: var(--bleu-fort);
+  }
+  h2 {
+    font-size: clamp(1.42rem, 3.1vw, 1.78rem);
+    font-weight: 700; letter-spacing: -.02em; line-height: 1.2;
+    color: var(--bleu-fort); margin-bottom: .9rem;
+  }
+  h3 {
+    font-size: 1.1rem; font-weight: 600; letter-spacing: -.008em;
+    margin: 2.2rem 0 .6rem; color: var(--encre);
+  }
+  h4 {
+    font-size: .96rem; font-weight: 600; margin: 1.5rem 0 .4rem; color: var(--encre);
+  }
+
+  .numero {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .74rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--bleu); margin-bottom: .5rem; font-variant-numeric: tabular-nums;
+  }
+
+  p { margin: 0 0 1.05rem; }
+  section > p:last-child, .carte > p:last-child, li > p:last-child { margin-bottom: 0; }
+
+  strong { font-weight: 600; color: var(--encre); }
+  em { font-style: italic; }
+
+  a { color: var(--bleu); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  a:focus-visible { outline: 2px solid var(--bleu); outline-offset: 2px; border-radius: 2px; }
+
+  ul, ol { margin: 0 0 1.05rem; padding-left: 1.3rem; }
+  li { margin-bottom: .42rem; }
+  li::marker { color: var(--bord-fort); }
+
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .845em; background: var(--code-fond);
+    padding: .12em .38em; border-radius: 4px;
+    border: 1px solid var(--bord);
+    color: var(--encre);
+  }
+  pre {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    background: var(--code-fond); border: 1px solid var(--bord);
+    border-radius: 10px; padding: 1rem 1.1rem;
+    overflow-x: auto; font-size: .82rem; line-height: 1.68;
+    margin: 0 0 1.2rem;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: 1em; }
+  .cmt { color: var(--encre-2); font-style: italic; }
+  .kw  { color: var(--bleu); font-weight: 600; }
+
+  /* ---------- Ouverture ---------- */
+  .ouverture { margin-bottom: 3.4rem; max-width: var(--lecture); }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .74rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--bleu); margin-bottom: 1rem;
+  }
+  .chapeau {
+    font-size: 1.16rem; color: var(--encre-2); line-height: 1.65;
+    margin-top: 1.1rem;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: .5rem;
+    margin-top: 1.6rem; padding-top: 1.4rem; border-top: 1px solid var(--bord);
+  }
+  .puce {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .76rem; font-weight: 500;
+    background: var(--surface-2); border: 1px solid var(--bord);
+    color: var(--encre-2); padding: .3rem .72rem; border-radius: 100px;
+  }
+
+  /* ---------- Cartes typées ---------- */
+  .carte {
+    border: 1px solid var(--bord); background: var(--surface);
+    border-radius: 12px; padding: 1.15rem 1.3rem;
+    margin: 0 0 1.4rem; box-shadow: var(--ombre);
+  }
+  .carte > .etiquette {
+    display: block;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; margin-bottom: .55rem;
+  }
+  .carte p:last-child, .carte ul:last-child, .carte ol:last-child { margin-bottom: 0; }
+
+  .definition { background: var(--surface-2); border-color: var(--bord-fort); }
+  .definition > .etiquette { color: var(--bleu); }
+
+  .analogie { background: var(--ambre-fond); border-color: color-mix(in srgb, var(--ambre) 42%, transparent); }
+  .analogie > .etiquette { color: var(--ambre-texte); }
+
+  .attention { background: var(--rouge-fond); border-color: color-mix(in srgb, var(--rouge) 34%, transparent); }
+  .attention > .etiquette { color: var(--rouge); }
+
+  .retenir { background: var(--vert-fond); border-color: color-mix(in srgb, var(--vert) 34%, transparent); }
+  .retenir > .etiquette { color: var(--vert); }
+
+  /* ---------- Exercices ---------- */
+  .exercice {
+    border: 1px solid var(--bleu); border-radius: 12px;
+    background: var(--surface); margin: 1.6rem 0 1.4rem;
+    overflow: hidden;
+  }
+  .exercice .enonce { padding: 1.15rem 1.3rem; }
+  .exercice .etiquette {
+    display: block;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--bleu); margin-bottom: .55rem;
+  }
+  .exercice p:last-child { margin-bottom: 0; }
+  .exercice > details { border-top: 1px solid var(--bord); }
+  .exercice > details > summary {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .85rem; font-weight: 600; color: var(--bleu);
+    padding: .8rem 1.3rem; cursor: pointer; background: var(--surface-2);
+    list-style: none;
+  }
+  .exercice > details > summary::-webkit-details-marker { display: none; }
+  .exercice > details > summary::before { content: "▸ "; }
+  .exercice > details[open] > summary::before { content: "▾ "; }
+  .exercice > details > summary:focus-visible { outline: 2px solid var(--bleu); outline-offset: -2px; }
+  .exercice .correction { padding: 1.15rem 1.3rem; background: var(--surface-2); }
+  .exercice .correction > *:last-child { margin-bottom: 0; }
+
+  /* ---------- Tableaux ---------- */
+  .tableau-enveloppe { overflow-x: auto; margin: 0 0 1.4rem; border-radius: 10px; border: 1px solid var(--bord); }
+  table {
+    border-collapse: collapse; width: 100%;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .84rem; background: var(--surface);
+  }
+  th {
+    text-align: left; font-weight: 600; color: var(--encre-2);
+    font-size: .72rem; letter-spacing: .05em; text-transform: uppercase;
+    padding: .7rem .85rem; background: var(--surface-2);
+    border-bottom: 1px solid var(--bord); white-space: nowrap;
+  }
+  td {
+    padding: .7rem .85rem; border-bottom: 1px solid var(--bord);
+    vertical-align: top; line-height: 1.52;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { font-size: .84em; }
+  .num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+  /* ---------- Schémas ---------- */
+  .schema {
+    border: 1px solid var(--bord); background: var(--surface-2);
+    border-radius: 12px; padding: 1.4rem 1.2rem; margin: 0 0 1.4rem;
+    overflow-x: auto;
+  }
+  .schema svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .schema figcaption {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .78rem; color: var(--encre-2); text-align: center;
+    margin-top: .9rem;
+  }
+  .s-boite { fill: var(--surface); stroke: var(--bord-fort); }
+  .s-boite-bleue { fill: var(--bleu); stroke: var(--bleu); }
+  .s-boite-ambre { fill: var(--ambre); stroke: var(--ambre); }
+  .s-txt { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--encre); }
+  .s-txt-inv { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: #fff; }
+  .s-petit { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 10.5px; fill: var(--encre-2); }
+  .s-petit-inv { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 10.5px; fill: rgba(255,255,255,.85); }
+  .s-fleche { stroke: var(--bord-fort); stroke-width: 1.6; fill: none; }
+  .s-fleche-tete { fill: var(--bord-fort); }
+
+  /* ---------- Divers ---------- */
+  .paire { display: grid; gap: 1rem; }
+  @media (min-width: 700px) { .paire { grid-template-columns: 1fr 1fr; } }
+
+  .chiffres {
+    display: grid; gap: .8rem; margin: 0 0 1.4rem;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+  .chiffre {
+    border: 1px solid var(--bord); border-radius: 10px;
+    padding: .85rem .95rem; background: var(--surface);
+  }
+  .chiffre .v {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--bleu);
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .chiffre .l {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .74rem; color: var(--encre-2); margin-top: .3rem; line-height: 1.35;
+  }
+
+  .arbre {
+    font-family: "IBM Plex Mono", monospace; font-size: .8rem;
+    line-height: 1.85; background: var(--code-fond);
+    border: 1px solid var(--bord); border-radius: 10px;
+    padding: 1.1rem 1.2rem; overflow-x: auto; margin: 0 0 1.4rem;
+  }
+  .arbre .c { color: var(--encre-2); }
+  .arbre .d { color: var(--bleu); font-weight: 600; }
+
+  hr {
+    border: none; border-top: 1px solid var(--bord);
+    margin: 3rem 0; max-width: var(--lecture);
+  }
+
+  .fin {
+    max-width: var(--lecture); margin-top: 4rem; padding-top: 1.8rem;
+    border-top: 2px solid var(--bleu);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .84rem; color: var(--encre-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+</style>
+
+<div class="page">
+
+  <!-- ================= SOMMAIRE ================= -->
+  <nav class="sommaire" aria-label="Sommaire">
+    <div class="marque">
+      <svg width="34" height="34" viewBox="0 0 120 120" aria-hidden="true">
+        <g fill="none" stroke-width="17" stroke-linecap="round">
+          <path d="M 60.00 16.50 A 43.5 43.5 0 0 1 74.79 19.11" stroke="var(--bleu)"/>
+          <path d="M 90.75 27.24 A 43.5 43.5 0 0 1 100.89 45.21" stroke="var(--bleu)"/>
+          <path d="M 103.50 60.00 A 43.5 43.5 0 0 1 100.89 74.79" stroke="var(--bleu)"/>
+          <path d="M 92.76 90.75 A 43.5 43.5 0 0 1 74.79 100.89" stroke="var(--bleu)"/>
+          <path d="M 60.00 103.50 A 43.5 43.5 0 0 1 45.21 100.89" stroke="var(--bleu)"/>
+          <path d="M 29.25 92.76 A 43.5 43.5 0 0 1 19.11 74.79" stroke="var(--ambre)"/>
+          <path d="M 16.50 60.00 A 43.5 43.5 0 0 1 19.11 45.21" stroke="var(--bord-fort)"/>
+          <path d="M 27.24 29.25 A 43.5 43.5 0 0 1 45.21 19.11" stroke="var(--bord-fort)"/>
+        </g>
+        <circle cx="60" cy="60" r="22" fill="var(--bleu)"/>
+      </svg>
+      <div>
+        <div class="marque-nom">KAYNA KAYNA PAY</div>
+        <div class="marque-sous">Guide de compréhension</div>
+      </div>
+    </div>
+
+    <details class="sommaire-mobile" open>
+      <summary>Sommaire</summary>
+      <ol>
+        <li><a href="#s1">Le projet en une phrase</a></li>
+        <li><a href="#s2">Le vocabulaire d'abord</a></li>
+        <li><a href="#s3">L'architecture : trois morceaux</a></li>
+        <li><a href="#s4">Le dossier, fichier par fichier</a></li>
+        <li><a href="#s5">Ce que vit le client</a></li>
+        <li><a href="#s6">Le cœur : le versement</a></li>
+        <li><a href="#s7">Les trois règles d'or de l'argent</a></li>
+        <li><a href="#s8">La base de données</a></li>
+        <li><a href="#s9">La sécurité</a></li>
+        <li><a href="#s10">Comment on sait que ça marche</a></li>
+        <li><a href="#s11">Les pièges à connaître</a></li>
+        <li><a href="#s12">Ce qui reste à faire</a></li>
+        <li><a href="#s13">Exercices de synthèse</a></li>
+        <li><a href="#s14">Résumé en une page</a></li>
+      </ol>
+    </details>
+  </nav>
+
+  <!-- ================= CORPS ================= -->
+  <main>
+
+    <header class="ouverture">
+      <div class="eyebrow">Guide d'apprentissage · Août 2026</div>
+      <h1>Comprendre Kayna&nbsp;Kayna&nbsp;Pay</h1>
+      <p class="chapeau">
+        Tout le projet expliqué depuis zéro : ce qu'il fait, comment il est construit,
+        pourquoi chaque choix a été fait, et ce qui reste à faire. Aucune connaissance
+        technique n'est supposée — chaque mot est défini avant d'être utilisé.
+      </p>
+      <div class="meta">
+        <span class="puce">Lecture ≈ 45 min</span>
+        <span class="puce">14 parties</span>
+        <span class="puce">Exercices corrigés</span>
+        <span class="puce">Aucun prérequis</span>
+      </div>
+    </header>
+
+    <div class="bloc">
+      <div class="carte definition">
+        <span class="etiquette">Comment lire ce guide</span>
+        <p>
+          Les parties se suivent : chacune s'appuie sur la précédente. Si un passage
+          résiste, ne le sautez pas — c'est probablement qu'un mot n'a pas été compris,
+          et la partie&nbsp;2 est là pour ça.
+        </p>
+        <p>
+          Les <strong>exercices</strong> sont importants. Répondez dans votre tête avant
+          d'ouvrir la correction : c'est en essayant qu'on retient, pas en lisant.
+        </p>
+        <p style="margin-bottom:0">
+          À la fin, vous devez pouvoir expliquer le projet à quelqu'un d'autre. C'est
+          le vrai test.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ 1 ============ -->
+    <section id="s1">
+      <span class="numero">Partie 01</span>
+      <h2>Le projet en une phrase</h2>
+
+      <div class="carte definition">
+        <span class="etiquette">Définition simple</span>
+        <p style="margin-bottom:0">
+          <strong>Kayna Kayna Pay est une application qui permet d'acheter un produit
+          en le payant petit à petit, et de le recevoir une fois qu'il est entièrement
+          payé.</strong>
+        </p>
+      </div>
+
+      <p>
+        C'est tout. Le reste — le code, les serveurs, la base de données — n'existe que
+        pour rendre cette phrase vraie et sûre.
+      </p>
+
+      <h3>Pourquoi c'est important</h3>
+      <p>
+        Au Niger, beaucoup de gens paient déjà petit à petit : on donne 2&nbsp;000&nbsp;F
+        par-ci, 5&nbsp;000&nbsp;F par-là à une vendeuse, jusqu'à compléter le prix d'un lot
+        d'ustensiles. Ça marche, mais <strong>rien n'est écrit</strong>. Aucune preuve,
+        aucune garantie. Sur WhatsApp, des clients finissent de payer et le vendeur
+        disparaît.
+      </p>
+      <p>
+        Le problème n'est donc pas d'inventer une pratique — elle existe. Le problème est
+        de <strong>la sécuriser</strong>. C'est exactement ce que fait le logiciel :
+        il garde une trace de chaque franc, il garantit au client qu'il recevra son
+        produit, et il garantit au vendeur qu'il sera payé.
+      </p>
+
+      <div class="carte analogie">
+        <span class="etiquette">Analogie</span>
+        <p style="margin-bottom:0">
+          Pensez à une <strong>tontine</strong>, mais pour un seul objet et avec un
+          arbitre. Vous mettez de l'argent de côté progressivement ; l'arbitre
+          (la plateforme) tient les comptes, garde l'argent, et ne le remet au vendeur
+          que le jour où vous recevez votre produit. Personne ne peut tricher parce que
+          tout est écrit.
+        </p>
+      </div>
+
+      <h3>Comment l'argent circule</h3>
+      <p>
+        Le client verse par <strong>mobile money</strong> (NITA, Amana, Wave) sur le compte
+        de la plateforme. L'argent <em>ne va pas directement au vendeur</em> : il reste
+        chez Kayna Kayna Pay jusqu'à la livraison. C'est ce qui rend l'arnaque impossible.
+      </p>
+      <p>
+        Le revenu de la plateforme est une <strong>commission de 5&nbsp;%</strong>, déjà
+        comprise dans le prix affiché. Un produit à 100&nbsp;000&nbsp;F chez le vendeur
+        est affiché 105&nbsp;000&nbsp;F. Le vendeur touche ses 100&nbsp;000&nbsp;F, la
+        plateforme garde 5&nbsp;000&nbsp;F.
+      </p>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 1</span>
+          <p style="margin-bottom:0">
+            Un vendeur propose une moto à 640&nbsp;000&nbsp;F. Quel prix voit le client
+            dans l'application, et combien gagne la plateforme ?
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              La commission est de 5&nbsp;% :
+              640&nbsp;000&nbsp;×&nbsp;1,05&nbsp;=&nbsp;<strong>672&nbsp;000&nbsp;F</strong>.
+            </p>
+            <p>
+              Le client voit donc <strong>672&nbsp;000&nbsp;F</strong>, le vendeur touche
+              <strong>640&nbsp;000&nbsp;F</strong>, la plateforme gagne
+              <strong>32&nbsp;000&nbsp;F</strong>.
+            </p>
+            <p style="margin-bottom:0">
+              Détail que le code ajoute : le résultat est arrondi aux 5&nbsp;F supérieurs
+              (ici le compte tombe juste). Ce choix d'arrondi n'était pas tranché dans le
+              cahier des charges — il a été décidé pendant le développement, et reste à
+              confirmer par vous.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 2 ============ -->
+    <section id="s2">
+      <span class="numero">Partie 02</span>
+      <h2>Le vocabulaire d'abord</h2>
+
+      <p>
+        On ne peut pas comprendre une explication si les mots sont flous. Voici les seuls
+        termes techniques nécessaires pour tout le reste du guide. Revenez-y sans hésiter.
+      </p>
+
+      <div class="tableau-enveloppe">
+        <table>
+          <thead>
+            <tr><th>Mot</th><th>Ce que ça veut dire, simplement</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Serveur</strong></td>
+              <td>Un ordinateur allumé en permanence qui répond aux demandes des autres. Quand votre téléphone demande « donne-moi la liste des motos », c'est lui qui répond.</td>
+            </tr>
+            <tr>
+              <td><strong>Backend</strong><br><span style="color:var(--encre-2);font-size:.9em">(« arrière-boutique »)</span></td>
+              <td>Le programme qui tourne sur le serveur. Invisible pour l'utilisateur. Il contient les règles : qui a le droit de faire quoi, combien reste-t-il à payer, un versement est-il valide.</td>
+            </tr>
+            <tr>
+              <td><strong>Frontend</strong><br><span style="color:var(--encre-2);font-size:.9em">(« devanture »)</span></td>
+              <td>Ce que l'utilisateur voit et touche : l'application sur le téléphone, les pages web de votre équipe.</td>
+            </tr>
+            <tr>
+              <td><strong>API</strong></td>
+              <td>La liste des demandes que le backend accepte. Comme un menu de restaurant : vous ne pouvez commander que ce qui est écrit dessus. Notre API a <strong>36 entrées</strong>.</td>
+            </tr>
+            <tr>
+              <td><strong>Base de données</strong></td>
+              <td>Là où tout est écrit et conservé. Un immense cahier organisé en tableaux. Si le serveur s'éteint, la base garde tout.</td>
+            </tr>
+            <tr>
+              <td><strong>Table</strong></td>
+              <td>Un tableau dans la base. Une table = un type d'information. La table <code>versements</code> contient tous les versements, une ligne par versement.</td>
+            </tr>
+            <tr>
+              <td><strong>Requête</strong></td>
+              <td>Une question posée à la base : « donne-moi tous les versements en attente ». Écrite dans un langage appelé SQL.</td>
+            </tr>
+            <tr>
+              <td><strong>Transaction</strong></td>
+              <td>Un groupe d'écritures « tout ou rien ». Soit tout réussit, soit rien n'est écrit. Essentiel quand on touche à l'argent.</td>
+            </tr>
+            <tr>
+              <td><strong>Jeton</strong> <span style="color:var(--encre-2);font-size:.9em">(token)</span></td>
+              <td>Un bracelet de festival numérique. Après la connexion, le serveur donne un jeton ; à chaque demande suivante, on le montre au lieu de redonner son mot de passe.</td>
+            </tr>
+            <tr>
+              <td><strong>OTP</strong></td>
+              <td>Le code à 6 chiffres envoyé par SMS. « Mot de passe à usage unique ». Il prouve que le numéro vous appartient vraiment.</td>
+            </tr>
+            <tr>
+              <td><strong>Rôle</strong></td>
+              <td>Ce qu'une personne a le droit de faire. Quatre existent : <code>client</code>, <code>partenaire</code>, <code>admin</code>, <code>superadmin</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Temps réel</strong></td>
+              <td>Une information qui arrive toute seule, sans rafraîchir la page. C'est ce qui fait qu'un versement apparaît chez l'admin à la seconde où le client le déclare.</td>
+            </tr>
+            <tr>
+              <td><strong>Migration</strong></td>
+              <td>Une modification de la structure de la base, numérotée et appliquée une seule fois. Comme une réforme du cahier, datée et signée.</td>
+            </tr>
+            <tr>
+              <td><strong>Dépôt / Git</strong></td>
+              <td>Le classeur qui contient tout le code, avec l'historique de chaque changement. Hébergé sur GitHub.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="carte retenir">
+        <span class="etiquette">À retenir</span>
+        <p style="margin-bottom:0">
+          Trois mots portent tout le reste : <strong>frontend</strong> (ce qu'on voit),
+          <strong>backend</strong> (les règles), <strong>base de données</strong>
+          (la mémoire). Si vous tenez ces trois-là, la suite s'enchaîne.
+        </p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 3 ============ -->
+    <section id="s3">
+      <span class="numero">Partie 03</span>
+      <h2>L'architecture : trois morceaux</h2>
+
+      <p>
+        Le projet est fait de trois programmes qui se parlent. C'est la carte mentale la
+        plus importante du guide.
+      </p>
+
+      <figure class="schema">
+        <svg viewBox="0 0 620 300" role="img" aria-label="Schéma : l'application mobile et les espaces web parlent au backend, qui seul parle à la base de données">
+          <!-- clients -->
+          <rect class="s-boite" x="14" y="20" width="150" height="76" rx="10"/>
+          <text class="s-txt" x="34" y="48">Application mobile</text>
+          <text class="s-petit" x="34" y="68">Le client</text>
+          <text class="s-petit" x="34" y="84">React Native · 16 écrans</text>
+
+          <rect class="s-boite" x="14" y="120" width="150" height="76" rx="10"/>
+          <text class="s-txt" x="34" y="148">Espace admin</text>
+          <text class="s-petit" x="34" y="168">Votre équipe</text>
+          <text class="s-petit" x="34" y="184">Pages web</text>
+
+          <rect class="s-boite" x="14" y="220" width="150" height="66" rx="10"/>
+          <text class="s-txt" x="34" y="248">Espace partenaire</text>
+          <text class="s-petit" x="34" y="268">Les vendeurs</text>
+
+          <!-- flèches vers backend -->
+          <path class="s-fleche" d="M 168 58 L 232 130"/>
+          <path class="s-fleche" d="M 168 158 L 232 155"/>
+          <path class="s-fleche" d="M 168 250 L 232 180"/>
+          <polygon class="s-fleche-tete" points="238,132 226,126 230,138"/>
+          <polygon class="s-fleche-tete" points="238,155 227,149 227,161"/>
+          <polygon class="s-fleche-tete" points="238,178 227,175 231,187"/>
+
+          <!-- backend -->
+          <rect class="s-boite-bleue" x="242" y="96" width="164" height="112" rx="10"/>
+          <text class="s-txt-inv" x="264" y="128">BACKEND</text>
+          <text class="s-petit-inv" x="264" y="150">Toutes les règles</text>
+          <text class="s-petit-inv" x="264" y="168">36 entrées d'API</text>
+          <text class="s-petit-inv" x="264" y="186">Next.js · Node.js</text>
+
+          <!-- flèche vers base -->
+          <path class="s-fleche" d="M 410 152 L 462 152"/>
+          <polygon class="s-fleche-tete" points="470,152 458,146 458,158"/>
+
+          <!-- base -->
+          <rect class="s-boite" x="474" y="106" width="132" height="92" rx="10"/>
+          <ellipse cx="540" cy="130" rx="42" ry="11" fill="var(--surface-3)" stroke="var(--bord-fort)"/>
+          <text class="s-txt" x="500" y="166">La mémoire</text>
+          <text class="s-petit" x="494" y="184">PostgreSQL · 13 tables</text>
+        </svg>
+        <figcaption>
+          Rien ne parle jamais directement à la base : tout passe par le backend.
+        </figcaption>
+      </figure>
+
+      <div class="carte analogie">
+        <span class="etiquette">Analogie du restaurant</span>
+        <p>
+          <strong>La salle</strong> — l'application et les pages web. C'est là que les
+          gens s'assoient et commandent. Joli, confortable, mais aucune nourriture n'y est
+          préparée.
+        </p>
+        <p>
+          <strong>La cuisine</strong> — le backend. C'est là que tout se décide :
+          la recette, les quantités, qui a droit à quoi. Les clients n'y entrent jamais.
+        </p>
+        <p style="margin-bottom:0">
+          <strong>Le garde-manger</strong> — la base de données. Tout y est rangé et
+          conservé. <em>Seule la cuisine y a accès.</em> Un client qui se servirait
+          directement dans le garde-manger, ce serait la catastrophe — c'est pour ça que
+          la flèche du schéma ne part que du backend.
+        </p>
+      </div>
+
+      <h3>Pourquoi séparer ainsi ?</h3>
+      <p>
+        Parce que <strong>le téléphone n'est pas digne de confiance</strong>. Un
+        utilisateur malintentionné peut modifier ce que son téléphone envoie. S'il
+        pouvait écrire directement dans la base, il s'offrirait une moto en changeant un
+        chiffre.
+      </p>
+      <p>
+        En mettant toutes les règles dans le backend, on a <strong>un seul endroit à
+        protéger</strong>. Le téléphone n'est qu'un affichage : il demande, le backend
+        décide.
+      </p>
+
+      <div class="carte attention">
+        <span class="etiquette">Erreur fréquente</span>
+        <p style="margin-bottom:0">
+          Croire qu'une vérification faite dans l'application suffit. Si le téléphone
+          empêche de verser moins de 100&nbsp;F, c'est du confort d'affichage —
+          <strong>le backend doit refaire la vérification</strong>, parce que rien
+          n'empêche quelqu'un de contourner l'application. Dans ce projet, chaque règle
+          est vérifiée côté serveur, systématiquement.
+        </p>
+      </div>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 2</span>
+          <p style="margin-bottom:0">
+            Un développeur pressé propose : « pour aller plus vite, laissons l'application
+            mobile lire directement la base de données ». Donnez-lui deux raisons de
+            refuser.
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              <strong>1. La sécurité.</strong> Pour lire la base, l'application devrait
+              contenir le mot de passe de la base. Ce mot de passe serait donc sur tous les
+              téléphones du pays — n'importe qui pourrait l'extraire et lire, voire modifier,
+              tous les comptes.
+            </p>
+            <p>
+              <strong>2. Les règles disparaîtraient.</strong> Le montant minimum, la
+              commission, l'anti-doublon, la vérification des rôles : tout cela vit dans le
+              backend. En le contournant, on contourne les règles.
+            </p>
+            <p style="margin-bottom:0">
+              <strong>Bonus.</strong> On ne pourrait plus rien corriger : changer une règle
+              obligerait chaque utilisateur à mettre à jour son application. Avec un backend,
+              on corrige à un seul endroit, immédiatement, pour tout le monde.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 4 ============ -->
+    <section id="s4">
+      <span class="numero">Partie 04</span>
+      <h2>Le dossier, fichier par fichier</h2>
+
+      <p>
+        Voici ce que contient le projet quand vous l'ouvrez. Cinq dossiers, chacun avec un
+        rôle net.
+      </p>
+
+      <div class="arbre">
+<span class="d">kayna-kayna-pay/</span>
+├── <span class="d">docs/</span>          <span class="c">Toute la documentation écrite (8 documents)</span>
+├── <span class="d">identite/</span>      <span class="c">Le logo, ses déclinaisons, la charte graphique</span>
+├── <span class="d">pitch/</span>         <span class="c">La présentation, 13 diapositives (PowerPoint + PDF)</span>
+├── <span class="d">plateforme/</span>    <span class="c">LE BACKEND + les deux espaces web</span>
+└── <span class="d">mobile/</span>        <span class="c">L'APPLICATION du client</span>
+      </div>
+
+      <h3>Dans <code>plateforme/</code> — le cerveau</h3>
+
+      <div class="arbre">
+<span class="d">plateforme/</span>
+├── server.js          <span class="c">Le démarreur : allume tout</span>
+├── <span class="d">db/migrations/</span>     <span class="c">La structure de la base (2 migrations)</span>
+├── <span class="d">lib/</span>               <span class="c">★ LES RÈGLES MÉTIER (11 fichiers)</span>
+│   ├── versements.js  <span class="c">★★ Le cœur : validation des versements</span>
+│   ├── achats.js      <span class="c">Démarrer un achat, suivre un portefeuille</span>
+│   ├── auth.js        <span class="c">Qui est connecté, qui a le droit de quoi</span>
+│   ├── db.js          <span class="c">Parler à la base de données</span>
+│   ├── otp.js + sms/  <span class="c">Les codes par SMS</span>
+│   ├── notifications.js <span class="c">Prévenir les gens</span>
+│   ├── audit.js       <span class="c">Le journal : qui a fait quoi, quand</span>
+│   └── ratelimit.js   <span class="c">Empêcher les abus</span>
+├── <span class="d">pages/api/</span>         <span class="c">Les 36 entrées de l'API</span>
+├── <span class="d">pages/admin/</span>       <span class="c">Les écrans de votre équipe</span>
+├── <span class="d">pages/partenaire/</span>  <span class="c">L'écran des vendeurs</span>
+└── <span class="d">scripts/</span>           <span class="c">migrer, seed (données de démo), smoke (tests)</span>
+      </div>
+
+      <div class="carte definition">
+        <span class="etiquette">La règle d'organisation</span>
+        <p style="margin-bottom:0">
+          <code>pages/api/</code> ne contient <strong>aucune règle</strong>. Ces fichiers
+          se contentent de recevoir la demande, d'appeler <code>lib/</code>, et de renvoyer
+          la réponse. Toute la réflexion est dans <code>lib/</code>.
+          <br><br>
+          C'est volontaire : quand on cherche « comment un versement est validé »,
+          on sait qu'il faut ouvrir <code>lib/versements.js</code> — pas fouiller
+          36 fichiers.
+        </p>
+      </div>
+
+      <h3>Dans <code>mobile/</code> — ce que tient le client</h3>
+
+      <div class="arbre">
+<span class="d">mobile/</span>
+├── App.js             <span class="c">La navigation : quel écran, quand</span>
+├── <span class="d">assets/</span>            <span class="c">Icône, écran de démarrage, logo</span>
+└── <span class="d">src/</span>
+    ├── theme.js       <span class="c">Les couleurs de la marque</span>
+    ├── <span class="d">api/</span>           <span class="c">Comment parler au backend</span>
+    ├── <span class="d">composants/</span>    <span class="c">Boutons, champs, barres de progression</span>
+    └── <span class="d">ecrans/</span>        <span class="c">Les 16 écrans, un fichier chacun</span>
+      </div>
+
+      <div class="chiffres">
+        <div class="chiffre"><div class="v">5&nbsp;355</div><div class="l">lignes de code écrites</div></div>
+        <div class="chiffre"><div class="v">36</div><div class="l">entrées d'API</div></div>
+        <div class="chiffre"><div class="v">16</div><div class="l">écrans mobiles</div></div>
+        <div class="chiffre"><div class="v">13</div><div class="l">tables en base</div></div>
+        <div class="chiffre"><div class="v">25</div><div class="l">tests automatiques</div></div>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 5 ============ -->
+    <section id="s5">
+      <span class="numero">Partie 05</span>
+      <h2>Ce que vit le client</h2>
+
+      <p>
+        Avant la technique, le parcours humain. Il y a trois personnes autour de chaque
+        achat, et chacune voit une chose différente.
+      </p>
+
+      <h3>Le client, sur son téléphone</h3>
+      <ol>
+        <li>Il crée un compte avec son numéro, reçoit un code par SMS, le saisit.</li>
+        <li>Il parcourt le catalogue et ouvre une fiche produit.</li>
+        <li>Un <strong>simulateur</strong> lui dit : « à 2&nbsp;000&nbsp;F par jour, vous terminez en 336 jours ».</li>
+        <li>Il appuie sur <em>Commencer à payer</em> : un <strong>portefeuille</strong> s'ouvre à 0&nbsp;F.</li>
+        <li>Quand il a de l'argent, il déclare un versement, dépose par mobile money, et confirme.</li>
+        <li>Il attend quelques instants, puis reçoit : <em>« Versement validé ✓ »</em>.</li>
+        <li>Sa barre de progression avance. Il recommence quand il veut.</li>
+        <li>Au bout : l'achat passe <em>complété</em>, et il reçoit son produit.</li>
+      </ol>
+
+      <div class="carte definition">
+        <span class="etiquette">Portefeuille</span>
+        <p style="margin-bottom:0">
+          Un mot important du projet. Un <strong>portefeuille = un achat en cours</strong>.
+          Un client qui achète une moto <em>et</em> un téléphone a deux portefeuilles
+          séparés, qui se remplissent indépendamment. On ne mélange jamais l'argent de
+          deux achats.
+        </p>
+      </div>
+
+      <h3>Votre équipe, sur l'espace web</h3>
+      <p>
+        Un écran principal : <strong>la file de validation</strong>. Chaque versement
+        déclaré y apparaît tout seul. Pour chacun, on vérifie dans l'application mobile
+        money que l'argent est bien arrivé, puis on clique <em>Valider</em> ou
+        <em>Rejeter</em>. C'est le travail quotidien.
+      </p>
+
+      <h3>Le vendeur partenaire</h3>
+      <p>
+        Il a un tableau de bord : combien d'achats en cours sur ses produits, combien
+        les clients ont déjà versé, quelles commandes sont à préparer. Il est prévenu
+        quand un achat est complété. <strong>Il n'est payé qu'à la livraison</strong> —
+        c'est ce qui protège le client.
+      </p>
+
+      <div class="carte retenir">
+        <span class="etiquette">À retenir</span>
+        <p style="margin-bottom:0">
+          Le moment décisif du produit tient en quelques secondes : le client déclare,
+          l'équipe valide, <strong>et le téléphone du client se met à jour tout seul</strong>.
+          C'est cette immédiateté qui remplace la confiance personnelle des circuits
+          informels.
+        </p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 6 ============ -->
+    <section id="s6">
+      <span class="numero">Partie 06</span>
+      <h2>Le cœur : le versement</h2>
+
+      <p>
+        Si vous ne retenez qu'une partie technique, que ce soit celle-ci. Tout le reste
+        du projet existe pour que cette mécanique soit fiable.
+      </p>
+
+      <h3>Le problème à résoudre</h3>
+      <p>
+        Nous n'utilisons <strong>pas</strong> les API des opérateurs mobile money —
+        trop chères et trop complexes pour un démarrage. Conséquence : quand un client
+        dépose de l'argent, <em>le logiciel ne le sait pas</em>. Personne ne le prévient.
+      </p>
+      <p>
+        Il faut donc qu'un humain vérifie et confirme. Toute la difficulté est de rendre
+        cette vérification manuelle <strong>fiable et traçable</strong> — sans jamais
+        perdre l'argent de quelqu'un.
+      </p>
+
+      <div class="carte definition">
+        <span class="etiquette">Machine à états</span>
+        <p style="margin-bottom:0">
+          Une façon de dire : <strong>cette chose ne peut être que dans un état à la fois,
+          et les passages autorisés d'un état à l'autre sont écrits d'avance.</strong>
+          Un versement ne peut pas passer de « rejeté » à « validé » : ce chemin n'existe
+          pas dans la liste, donc le code refuse.
+        </p>
+      </div>
+
+      <figure class="schema">
+        <svg viewBox="0 0 640 250" role="img" aria-label="Machine à états d'un versement : initié, en attente, puis validé, rejeté ou en vérification">
+          <rect class="s-boite" x="10" y="98" width="104" height="46" rx="9"/>
+          <text class="s-txt" x="40" y="126">initié</text>
+
+          <path class="s-fleche" d="M 118 121 L 172 121"/>
+          <polygon class="s-fleche-tete" points="180,121 168,115 168,127"/>
+          <text class="s-petit" x="112" y="112">« j'ai déposé »</text>
+
+          <rect class="s-boite-ambre" x="184" y="98" width="118" height="46" rx="9"/>
+          <text class="s-txt-inv" x="204" y="126">en attente</text>
+
+          <!-- vers validé -->
+          <path class="s-fleche" d="M 306 110 L 396 62"/>
+          <polygon class="s-fleche-tete" points="404,58 391,56 397,68"/>
+          <text class="s-petit" x="316" y="80">admin valide</text>
+
+          <!-- vers rejeté -->
+          <path class="s-fleche" d="M 306 132 L 396 180"/>
+          <polygon class="s-fleche-tete" points="404,184 397,172 391,184"/>
+          <text class="s-petit" x="316" y="172">admin rejette</text>
+
+          <!-- vers vérification -->
+          <path class="s-fleche" d="M 243 148 L 243 200"/>
+          <polygon class="s-fleche-tete" points="243,208 237,196 249,196"/>
+          <text class="s-petit" x="150" y="184">10 min passées</text>
+
+          <rect class="s-boite-bleue" x="410" y="34" width="118" height="46" rx="9"/>
+          <text class="s-txt-inv" x="436" y="62">validé</text>
+
+          <rect class="s-boite" x="410" y="158" width="118" height="46" rx="9"/>
+          <text class="s-txt" x="434" y="186">rejeté</text>
+
+          <rect class="s-boite" x="150" y="208" width="186" height="40" rx="9"/>
+          <text class="s-txt" x="168" y="233">en vérification</text>
+
+          <!-- vérification vers validé -->
+          <path class="s-fleche" d="M 340 224 Q 420 224 448 82"/>
+          <polygon class="s-fleche-tete" points="450,74 443,87 456,86"/>
+          <text class="s-petit" x="348" y="216">validé plus tard</text>
+        </svg>
+        <figcaption>
+          Les cinq états d'un versement. <strong>Validé</strong> et <strong>rejeté</strong>
+          sont définitifs : plus aucune flèche n'en sort.
+        </figcaption>
+      </figure>
+
+      <h3>Le parcours, étape par étape</h3>
+
+      <div class="tableau-enveloppe">
+        <table>
+          <thead>
+            <tr><th style="width:2.2rem">#</th><th>Ce qui se passe</th><th>Où</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">1</td><td>Le client saisit un montant et choisit son opérateur. Le système crée le versement en état <code>initié</code> et fabrique une <strong>référence unique</strong> (ex. <code>KKP-4F7B2</code>).</td><td>Téléphone</td></tr>
+            <tr><td class="num">2</td><td>L'application affiche les instructions : numéro de dépôt de la plateforme, montant, référence à recopier.</td><td>Téléphone</td></tr>
+            <tr><td class="num">3</td><td>Le client fait le vrai dépôt depuis son application NITA / Amana / Wave.</td><td>Hors du système</td></tr>
+            <tr><td class="num">4</td><td>Il appuie sur <em>J'ai effectué le dépôt</em> → état <code>en attente</code>. <strong>Le versement apparaît instantanément</strong> dans la file de l'équipe.</td><td>Téléphone → Admin</td></tr>
+            <tr><td class="num">5</td><td>L'équipe vérifie dans le compte mobile money réel (montant, numéro émetteur, référence).</td><td>Humain</td></tr>
+            <tr><td class="num">6</td><td>Elle valide (en saisissant le <strong>montant réellement reçu</strong>) ou rejette avec un motif.</td><td>Admin</td></tr>
+            <tr><td class="num">7</td><td>Le portefeuille est recalculé, le client est notifié en temps réel. Si le total est atteint, l'achat passe <code>complété</code>.</td><td>Automatique</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Pourquoi une référence sans <code>0</code>, <code>O</code>, <code>1</code> ni <code>I</code></h3>
+      <p>
+        La référence <code>KKP-4F7B2</code> utilise un alphabet volontairement amputé des
+        caractères ambigus. Raison très concrète : <strong>elle est dictée au téléphone et
+        recopiée à la main</strong> dans un motif de transfert. Confondre un zéro et un
+        « O » ferait échouer un rapprochement — donc ces caractères n'existent pas.
+      </p>
+
+      <div class="carte analogie">
+        <span class="etiquette">Le minuteur de 10 minutes</span>
+        <p>
+          Après avoir déclaré son dépôt, le client voit un compte à rebours de 10 minutes.
+          Que se passe-t-il s'il expire sans que l'équipe ait validé ?
+        </p>
+        <p style="margin-bottom:0">
+          <strong>Rien de grave, et c'est tout l'enjeu.</strong> Le versement passe
+          simplement en <em>« en vérification »</em>, avec un message rassurant : inutile
+          de rester sur la page, vous serez prévenu. L'équipe peut le valider une heure
+          plus tard. <strong>Un dépôt réel n'est jamais perdu</strong> — c'est le critère
+          d'acceptation le plus important du projet, et il est vérifié automatiquement à
+          chaque test.
+        </p>
+      </div>
+
+      <div class="carte attention">
+        <span class="etiquette">Règle anti-doublon</span>
+        <p style="margin-bottom:0">
+          Un client ne peut avoir qu'<strong>un seul versement en cours par achat</strong>.
+          Pourquoi ? Parce que s'il en déclarait trois de 5&nbsp;000&nbsp;F et qu'un seul
+          dépôt de 5&nbsp;000&nbsp;F arrivait, l'équipe serait incapable de savoir lequel
+          valider. La règle rend le rapprochement sans ambiguïté.
+        </p>
+      </div>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 3</span>
+          <p>
+            Un client déclare un versement de 5&nbsp;000&nbsp;F. En vérifiant, l'équipe
+            constate qu'il n'a en réalité déposé que 4&nbsp;500&nbsp;F.
+          </p>
+          <p style="margin-bottom:0">
+            Que doit faire l'équipe, et pourquoi le système garde-t-il les
+            <em>deux</em> montants ?
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              L'équipe <strong>valide pour 4&nbsp;500&nbsp;F</strong>, le montant réellement
+              reçu. Le portefeuille est crédité de 4&nbsp;500&nbsp;F et le client est notifié
+              du montant exact porté à son crédit.
+            </p>
+            <p>
+              Le système conserve deux colonnes distinctes :
+              <code>montant_declare</code> (5&nbsp;000, ce que le client a annoncé) et
+              <code>montant_valide</code> (4&nbsp;500, ce qui est arrivé).
+            </p>
+            <p style="margin-bottom:0">
+              <strong>Pourquoi garder les deux ?</strong> En cas de litige — « j'avais bien
+              envoyé 5&nbsp;000&nbsp;F ! » — on dispose des deux versions. Écraser la
+              déclaration d'origine ferait disparaître une information utile. Deux vérités
+              coexistent, aucune n'est effacée.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 7 ============ -->
+    <section id="s7">
+      <span class="numero">Partie 07</span>
+      <h2>Les trois règles d'or de l'argent</h2>
+
+      <p>
+        Un logiciel qui manipule l'argent des gens n'a pas droit à l'à-peu-près. Trois
+        principes gouvernent tout le code. Si vous devez un jour faire modifier ce
+        logiciel par quelqu'un, <strong>ce sont ces trois règles qu'il ne doit pas
+        casser</strong>.
+      </p>
+
+      <h3>Règle 1 — Une écriture validée ne change plus jamais</h3>
+      <p>
+        Dès qu'un versement est <em>validé</em> ou <em>rejeté</em>, sa ligne devient
+        intouchable. On n'efface pas, on ne corrige pas.
+      </p>
+      <p>
+        Et si l'équipe s'est trompée ? On ajoute une <strong>écriture d'ajustement</strong> :
+        une nouvelle ligne, signée, motivée, qui corrige. L'erreur reste visible, la
+        correction aussi.
+      </p>
+
+      <div class="carte analogie">
+        <span class="etiquette">Analogie comptable</span>
+        <p style="margin-bottom:0">
+          C'est la règle du <strong>cahier à l'encre</strong>. Un comptable ne gomme
+          jamais : il barre proprement et écrit une nouvelle ligne. Un cahier raturé au
+          blanc correcteur n'a aucune valeur de preuve — un cahier où l'on voit l'erreur
+          <em>et</em> sa correction, oui.
+        </p>
+      </div>
+
+      <h3>Règle 2 — Le solde n'est jamais saisi, il est recalculé</h3>
+      <p>
+        Nulle part dans le code on ne trouve « ajoute 5&nbsp;000 au solde ». À chaque
+        opération, le solde est <strong>recalculé depuis zéro</strong> :
+      </p>
+
+      <pre><code><span class="cmt">// La seule définition du solde qui existe dans le projet</span>
+solde = somme(<span class="kw">tous les versements validés</span>)
+      + somme(<span class="kw">tous les ajustements</span>)</code></pre>
+
+      <p>
+        C'est plus lent d'un cheveu, et infiniment plus sûr. <strong>Un solde faux est
+        réparable</strong> : on relance le calcul. Alors qu'un solde incrémenté à
+        l'aveugle, une fois faux, l'est pour toujours — et personne ne sait depuis quand.
+      </p>
+
+      <div class="carte definition">
+        <span class="etiquette">Vérification permanente</span>
+        <p style="margin-bottom:0">
+          Une requête d'une ligne permet de contrôler à tout moment que <em>tous</em> les
+          portefeuilles sont justes. Elle doit ne renvoyer aucun résultat. Elle fait partie
+          des tests automatiques et de la procédure après restauration d'une sauvegarde.
+        </p>
+      </div>
+
+      <h3>Règle 3 — Les interdits sont dans la base, pas seulement dans le code</h3>
+      <p>
+        L'anti-doublon aurait pu s'écrire en JavaScript : « avant de créer, regarde s'il
+        en existe déjà un ». Ça semble suffisant. <strong>Ça ne l'est pas.</strong>
+      </p>
+      <p>
+        Si le client appuie deux fois très vite, deux demandes partent en même temps.
+        Les deux regardent, les deux voient « rien en cours », les deux créent. Doublon.
+      </p>
+      <p>
+        La protection est donc posée <em>dans la base elle-même</em> : une contrainte
+        d'unicité qui rend physiquement impossible l'existence de deux versements actifs
+        sur un même achat. Quoi que fasse le code, la base refuse.
+      </p>
+
+      <div class="carte retenir">
+        <span class="etiquette">À retenir</span>
+        <p style="margin-bottom:0">
+          <strong>Écritures immuables · solde recalculé · interdits en base.</strong>
+          Ces trois règles sont la raison pour laquelle on peut affirmer, sans bluffer,
+          que l'argent des clients est correctement tenu.
+        </p>
+      </div>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 4</span>
+          <p style="margin-bottom:0">
+            Un client annule son achat et doit être remboursé de 20&nbsp;000&nbsp;F.
+            Pourquoi le système <strong>n'écrit-il pas simplement</strong>
+            « solde = solde − 20&nbsp;000 » ? Que fait-il à la place ?
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              Parce que cela violerait les règles&nbsp;1 et&nbsp;2 : on modifierait un solde
+              directement, et on perdrait la trace du remboursement — dans six mois,
+              personne ne saurait pourquoi ce portefeuille a baissé.
+            </p>
+            <p>
+              À la place, le système insère une <strong>écriture d'ajustement de
+              −20&nbsp;000&nbsp;F</strong>, avec son motif et le nom de l'administrateur qui
+              l'a passée. Puis il <strong>recalcule</strong> le solde à partir de toutes les
+              écritures.
+            </p>
+            <p style="margin-bottom:0">
+              Résultat identique à l'écran, mais l'histoire complète est conservée : on sait
+              qui a remboursé, quand, combien et pourquoi.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 8 ============ -->
+    <section id="s8">
+      <span class="numero">Partie 08</span>
+      <h2>La base de données</h2>
+
+      <p>
+        Treize tables. Vous n'avez pas besoin de toutes les connaître, mais en voir la
+        logique aide à comprendre le reste.
+      </p>
+
+      <div class="tableau-enveloppe">
+        <table>
+          <thead>
+            <tr><th>Table</th><th>Ce qu'elle contient</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>users</code></td><td>Tous les comptes — clients, partenaires, admins. Le rôle distingue les droits.</td></tr>
+            <tr><td><code>otp_codes</code></td><td>Les codes SMS, avec leur date d'expiration et leur usage.</td></tr>
+            <tr><td><code>partenaires</code></td><td>Les enseignes vendeuses.</td></tr>
+            <tr><td><code>categories</code></td><td>Téléphonie, informatique, motos… liste modifiable par l'admin.</td></tr>
+            <tr><td><code>produits</code></td><td>Le catalogue. Contient le prix vendeur <em>et</em> le prix affiché.</td></tr>
+            <tr><td><strong><code>achats</code></strong></td><td><strong>Les portefeuilles.</strong> Un achat = un portefeuille = un produit en cours de paiement.</td></tr>
+            <tr><td><strong><code>versements</code></strong></td><td><strong>Les écritures.</strong> Chaque versement, son montant déclaré, son montant validé, son état.</td></tr>
+            <tr><td><code>versement_transitions</code></td><td>L'historique des changements d'état : qui, quoi, quand. La pièce à consulter en cas de litige.</td></tr>
+            <tr><td><code>ajustements</code></td><td>Les corrections signées (remboursements notamment).</td></tr>
+            <tr><td><code>notifications</code></td><td>Tout ce qui a été envoyé aux utilisateurs.</td></tr>
+            <tr><td><code>parametres</code></td><td>Commission, versement minimum, numéros de dépôt, durée du minuteur.</td></tr>
+            <tr><td><code>audit_journal</code></td><td>Toutes les actions sensibles de l'équipe.</td></tr>
+            <tr><td><code>contenus</code></td><td>CGU, confidentialité, FAQ, contact — modifiables sans republier l'application.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Deux choix qui méritent une explication</h3>
+
+      <h4>Le prix est <em>recopié</em> dans l'achat</h4>
+      <p>
+        Quand un client démarre un achat, le prix affiché est <strong>copié</strong> dans
+        sa ligne d'achat. On ne se contente pas de pointer vers le produit.
+      </p>
+      <p>
+        Pourquoi ? Parce que le vendeur peut augmenter son prix demain. Avec une simple
+        référence, tous les achats en cours augmenteraient aussi — et la promesse « prix
+        garanti jusqu'au bout » serait trahie. En copiant, <strong>la promesse est tenue
+        par la structure même de la base</strong>, pas par la vigilance de quelqu'un.
+      </p>
+
+      <h4>Les règles de gestion sont en base, pas dans le code</h4>
+      <p>
+        La commission (5&nbsp;%), le versement minimum (100&nbsp;F), la durée du minuteur
+        (10&nbsp;min) sont stockés dans la table <code>parametres</code>. Le super-admin
+        peut les changer depuis l'interface, sans développeur et sans redémarrage.
+      </p>
+      <p>
+        C'est délibéré : plusieurs de ces valeurs sont encore marquées « à définir » dans
+        votre cahier des charges. Elles changeront après votre arbitrage — et chaque
+        changement est enregistré au journal d'audit.
+      </p>
+
+      <div class="carte definition">
+        <span class="etiquette">Les migrations</span>
+        <p style="margin-bottom:0">
+          La structure de la base évolue par <strong>migrations numérotées</strong>,
+          appliquées une seule fois chacune. Le système garde l'empreinte de chacune :
+          si quelqu'un modifie une migration déjà appliquée, l'outil <strong>refuse de
+          continuer</strong> — parce que la base et le code ne diraient plus la même
+          chose. C'est indispensable dès qu'il y aura de vraies données.
+        </p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 9 ============ -->
+    <section id="s9">
+      <span class="numero">Partie 09</span>
+      <h2>La sécurité</h2>
+
+      <p>
+        Le projet collecte l'argent du public. La sécurité n'y est pas une option, et
+        plusieurs mécanismes se superposent.
+      </p>
+
+      <div class="tableau-enveloppe">
+        <table>
+          <thead>
+            <tr><th>Protection</th><th>Contre quoi</th><th>Comment</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Mots de passe hachés</strong></td>
+              <td>Le vol de la base</td>
+              <td>Les mots de passe ne sont jamais stockés. On garde une empreinte irréversible (bcrypt). Même nous ne pouvons pas lire le mot de passe d'un client.</td>
+            </tr>
+            <tr>
+              <td><strong>Vérification par SMS</strong></td>
+              <td>Les faux comptes</td>
+              <td>Un code à usage unique prouve que le numéro appartient bien à la personne.</td>
+            </tr>
+            <tr>
+              <td><strong>Contrôle des rôles</strong></td>
+              <td>Un client qui se prendrait pour un admin</td>
+              <td>Chaque entrée de l'API vérifie le rôle, et le <strong>relit en base</strong> à chaque demande — suspendre un compte le coupe instantanément.</td>
+            </tr>
+            <tr>
+              <td><strong>Double authentification</strong></td>
+              <td>Le vol du mot de passe d'un admin</td>
+              <td>Mot de passe <em>puis</em> code SMS. Le mot de passe seul ne donne rien.</td>
+            </tr>
+            <tr>
+              <td><strong>Cookie httpOnly</strong></td>
+              <td>Le vol de session via une page piégée</td>
+              <td>Le jeton des espaces web est invisible pour le JavaScript de la page. Vérifié en conditions réelles.</td>
+            </tr>
+            <tr>
+              <td><strong>Limitation des tentatives</strong></td>
+              <td>Les essais de mots de passe en masse</td>
+              <td>15 tentatives de connexion par quart d'heure, puis blocage temporaire.</td>
+            </tr>
+            <tr>
+              <td><strong>Journal d'audit</strong></td>
+              <td>Les abus internes</td>
+              <td>Chaque validation, rejet, remboursement ou changement de paramètre est tracé avec son auteur.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>La double authentification expliquée</h3>
+      <p>
+        Depuis peu, un administrateur ne peut plus se connecter avec son seul mot de
+        passe. Le déroulé :
+      </p>
+      <ol>
+        <li>Il saisit son numéro et son mot de passe.</li>
+        <li>Le serveur lui donne un <strong>jeton temporaire</strong> — qui n'ouvre
+            aucune session — et envoie un code par SMS.</li>
+        <li>Il saisit le code. Le serveur exige <em>les deux</em> : le jeton temporaire
+            <strong>et</strong> le code.</li>
+        <li>Alors seulement la session s'ouvre.</li>
+      </ol>
+
+      <div class="carte definition">
+        <span class="etiquette">Le détail qui fait tout</span>
+        <p style="margin-bottom:0">
+          Le jeton temporaire est marqué d'une étiquette spéciale, et
+          <strong>toutes les entrées protégées de l'API la refusent</strong>. Sans cette
+          précaution, le jeton livré après le mot de passe aurait suffi à travailler —
+          et le deuxième facteur n'aurait servi à rien du tout. C'est typiquement le genre
+          de détail qui décide si une sécurité est réelle ou décorative.
+        </p>
+      </div>
+
+      <div class="carte attention">
+        <span class="etiquette">Conséquence pratique à connaître</span>
+        <p style="margin-bottom:0">
+          Le numéro de téléphone de chaque compte administrateur doit être
+          <strong>réellement accessible</strong> à la personne. Et le jour où la
+          passerelle SMS tombe en panne, <strong>plus aucun administrateur ne peut se
+          connecter</strong>. C'est le prix de cette sécurité, il faut le savoir avant
+          d'être en production.
+        </p>
+      </div>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 5</span>
+          <p style="margin-bottom:0">
+            Quelqu'un vole le mot de passe d'un de vos administrateurs. Que peut-il faire ?
+            Et si, en plus, il avait volé la base de données entière ?
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              <strong>Avec le mot de passe seul : rien.</strong> Il franchit la première
+              étape, mais le code SMS part sur le téléphone du vrai administrateur. Sans lui,
+              pas de session. La tentative est même enregistrée au journal d'audit.
+            </p>
+            <p>
+              <strong>Avec la base entière :</strong> il obtient les numéros, les noms et
+              l'historique des achats — c'est grave pour la vie privée. Mais
+              <strong>pas les mots de passe</strong> : la base ne contient que des empreintes
+              irréversibles. Il ne peut donc se connecter au nom de personne.
+            </p>
+            <p style="margin-bottom:0">
+              C'est le principe de la <em>défense en profondeur</em> : chaque protection
+              suppose que la précédente a pu tomber. Cela dit — cet exemple montre aussi
+              pourquoi les sauvegardes doivent être chiffrées et l'accès au serveur
+              strictement limité.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 10 ============ -->
+    <section id="s10">
+      <span class="numero">Partie 10</span>
+      <h2>Comment on sait que ça marche</h2>
+
+      <p>
+        Affirmer « ça marche » ne vaut rien sans preuve. Le projet contient un programme
+        qui <strong>rejoue le parcours complet automatiquement</strong> et vérifie
+        25&nbsp;points, un par un.
+      </p>
+
+      <pre><code>npm run smoke
+
+  ✓ L'inscription exige l'acceptation des CGU
+  ✓ Un client peut créer un compte vérifié par OTP
+  ✓ La connexion administrateur exige un deuxième facteur
+  ✓ Le jeton intermédiaire n'ouvre aucune session
+  ✓ Anti-doublon : un seul versement actif par achat
+  ✓ Un administrateur voit le versement apparaître en temps réel
+  ✓ Un versement dont le minuteur expire n'est jamais perdu
+  ✓ Le solde égale exactement la somme des écritures validées
+  ✓ Aucune route n'est accessible sans le rôle approprié
+  <span class="cmt">… et 16 autres</span>
+
+<span class="kw">Résultat : 25 critères validés, 0 en échec.</span></code></pre>
+
+      <p>
+        Ces 25 points ne sont pas inventés : ils viennent du <strong>chapitre 13 de votre
+        cahier des charges</strong>, complétés par les vérifications de sécurité. Chaque
+        modification future doit les laisser tous verts.
+      </p>
+
+      <div class="carte attention">
+        <span class="etiquette">Soyons précis sur ce que ça prouve</span>
+        <p style="margin-bottom:0">
+          Ces tests prouvent que <strong>la mécanique est juste</strong>. Ils ne prouvent
+          pas que le produit est agréable à utiliser, ni qu'il fonctionne avec de vrais
+          dépôts mobile money. Votre cahier des charges le dit lui-même : la recette
+          définitive suppose un essai <em>en conditions réelles avec de vrais dépôts de
+          faible montant</em>. Nous n'y sommes pas encore.
+        </p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 11 ============ -->
+    <section id="s11">
+      <span class="numero">Partie 11</span>
+      <h2>Les pièges à connaître</h2>
+
+      <p>
+        Un point d'honnêteté. Voici les faiblesses connues du projet — mieux vaut les
+        connaître d'avance que les découvrir en production.
+      </p>
+
+      <div class="tableau-enveloppe">
+        <table>
+          <thead>
+            <tr><th>Point faible</th><th>Conséquence réelle</th><th>Quand le traiter</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Jamais lancé sur un vrai téléphone</td>
+              <td>Le code est vérifié, mais aucun humain n'a encore tenu l'application en main</td>
+              <td><strong>Maintenant</strong></td>
+            </tr>
+            <tr>
+              <td>Pas de photos de produits</td>
+              <td>Vendre une moto à 672&nbsp;000&nbsp;F avec une ligne de texte sera difficile</td>
+              <td>Avant le pilote</td>
+            </tr>
+            <tr>
+              <td>Pas de vrais SMS</td>
+              <td>Aucune inscription possible hors développement</td>
+              <td>Avant le pilote</td>
+            </tr>
+            <tr>
+              <td>CGU non validées juridiquement</td>
+              <td>Les textes en base sont des <strong>projets</strong>, pas des documents opposables</td>
+              <td>Avant toute ouverture au public</td>
+            </tr>
+            <tr>
+              <td>Limitation des tentatives en mémoire</td>
+              <td>Avec plusieurs serveurs, la limite serait multipliée d'autant</td>
+              <td>À la montée en charge</td>
+            </tr>
+            <tr>
+              <td>Pas de pagination</td>
+              <td>Les listes sont plafonnées (100 à 300 lignes)</td>
+              <td>Quand les volumes grimperont</td>
+            </tr>
+            <tr>
+              <td>Espace partenaire en lecture seule</td>
+              <td>Votre équipe saisit le catalogue à leur place</td>
+              <td>Phase 3 (c'était prévu ainsi)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="carte attention">
+        <span class="etiquette">Le risque numéro un n'est pas technique</span>
+        <p style="margin-bottom:0">
+          C'est le <strong>cadre juridique</strong>. Collecter des fonds du public et les
+          conserver relève de la réglementation BCEAO/UEMOA sur les services de paiement.
+          Ce point ne se règle pas par du code : il demande une consultation juridique
+          avant tout lancement public. Aucune ligne de code ne peut vous couvrir là-dessus.
+        </p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 12 ============ -->
+    <section id="s12">
+      <span class="numero">Partie 12</span>
+      <h2>Ce qui reste à faire</h2>
+
+      <p>Dans l'ordre où ça compte.</p>
+
+      <div class="tableau-enveloppe">
+        <table>
+          <thead>
+            <tr><th style="width:2.2rem">#</th><th>Étape</th><th>Qui</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num">1</td><td><strong>Essayer l'application sur un vrai téléphone.</strong> Tout le reste en dépend — un guide pas-à-pas existe dans le projet.</td><td>Vous</td></tr>
+            <tr><td class="num">2</td><td>Arbitrer les règles « à définir » : frais d'annulation, délai d'inactivité, arrondi. Elles sont la substance des CGU.</td><td>Vous</td></tr>
+            <tr><td class="num">3</td><td>Consultation juridique BCEAO/UEMOA, puis validation des CGU.</td><td>Un juriste</td></tr>
+            <tr><td class="num">4</td><td>Contractualiser une passerelle SMS locale.</td><td>Vous</td></tr>
+            <tr><td class="num">5</td><td>Développer les photos de produits.</td><td>Développement</td></tr>
+            <tr><td class="num">6</td><td>Ouvrir les comptes mobile money professionnels, l'hébergement, le nom de domaine.</td><td>Vous</td></tr>
+            <tr><td class="num">7</td><td>Déployer, sauvegardes testées par une vraie restauration.</td><td>Développement</td></tr>
+            <tr><td class="num">8</td><td>Signer les premiers partenaires pilotes — le pitch deck est prêt.</td><td>Vous</td></tr>
+            <tr><td class="num">9</td><td>Pilote restreint avec de vrais dépôts de faible montant : <strong>c'est la vraie recette</strong>.</td><td>Tous</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="carte retenir">
+        <span class="etiquette">Le constat</span>
+        <p style="margin-bottom:0">
+          Sur ces neuf étapes, <strong>deux seulement relèvent du développement</strong>.
+          Le logiciel n'est plus le goulot d'étranglement du projet : ce sont les
+          démarches, les contrats et les décisions de gestion qui commandent maintenant
+          le calendrier.
+        </p>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 13 ============ -->
+    <section id="s13">
+      <span class="numero">Partie 13</span>
+      <h2>Exercices de synthèse</h2>
+
+      <p>
+        Trois questions qui demandent de relier plusieurs parties. Si vous les réussissez,
+        vous avez compris le projet.
+      </p>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 6 — le chemin complet</span>
+          <p style="margin-bottom:0">
+            Aïcha verse 3&nbsp;000&nbsp;F sur son achat. Racontez tout ce qui se passe,
+            depuis son doigt sur l'écran jusqu'à la notification qu'elle reçoit. Citez au
+            moins trois des cinq états d'un versement.
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              <strong>1.</strong> Aïcha saisit 3&nbsp;000&nbsp;F et choisit NITA. Le backend
+              vérifie : montant au-dessus du minimum, achat toujours en cours, aucun autre
+              versement actif. Il crée le versement en état <code>initié</code> avec une
+              référence unique.
+            </p>
+            <p>
+              <strong>2.</strong> L'application affiche le numéro de dépôt, le montant et la
+              référence. Aïcha fait le dépôt depuis son application NITA.
+            </p>
+            <p>
+              <strong>3.</strong> Elle appuie sur « J'ai effectué le dépôt » → état
+              <code>en attente</code>. Au même instant, le versement apparaît dans la file de
+              l'équipe, sans que personne n'ait rafraîchi quoi que ce soit.
+            </p>
+            <p>
+              <strong>4.</strong> L'équipe vérifie dans le compte NITA réel et clique
+              <em>Valider</em> → état <code>validé</code>. Dans une seule transaction : le
+              versement change d'état, l'action est journalisée, le solde est recalculé, et
+              l'achat passe éventuellement à <em>complété</em>.
+            </p>
+            <p style="margin-bottom:0">
+              <strong>5.</strong> Aïcha reçoit la notification en temps réel, sa barre de
+              progression avance.
+              <br><br>
+              <em>Variante à connaître :</em> si l'équipe n'avait pas validé dans les
+              10 minutes, le versement serait passé <code>en vérification</code> — et
+              validé plus tard, sans rien perdre.
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 7 — la panne</span>
+          <p style="margin-bottom:0">
+            Le serveur tombe en panne à 14&nbsp;h. On le remet en marche à 16&nbsp;h en
+            restaurant la sauvegarde de la nuit. Quel est le danger, et quelle est la
+            première chose à faire ?
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              <strong>Le danger :</strong> des clients ont pu déposer de l'argent pendant la
+              panne. Cet argent <em>est bien arrivé</em> sur les comptes mobile money — mais
+              la base restaurée date de la nuit et ne connaît pas ces versements.
+              <strong>De l'argent réel existe sans trace dans le système.</strong>
+            </p>
+            <p>
+              <strong>Première chose à faire :</strong> lancer le contrôle d'intégrité des
+              portefeuilles, qui doit ne renvoyer aucune ligne.
+            </p>
+            <p style="margin-bottom:0">
+              Ensuite, comparer les <strong>relevés des comptes mobile money</strong> avec
+              ce que dit la plateforme sur la période perdue, et recréditer les clients
+              concernés par des écritures d'ajustement — motivées et signées, conformément à
+              la règle&nbsp;1. La procédure complète est écrite dans la documentation
+              d'exploitation.
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercice">
+        <div class="enonce">
+          <span class="etiquette">Exercice 8 — la demande du vendeur</span>
+          <p style="margin-bottom:0">
+            Un partenaire vous demande : « augmentez le prix de ma moto, elle est passée à
+            700&nbsp;000&nbsp;F ». Trois clients sont déjà en train de la payer. Que se
+            passe-t-il pour eux, et pourquoi ?
+          </p>
+        </div>
+        <details>
+          <summary>Voir la correction</summary>
+          <div class="correction">
+            <p>
+              <strong>Il ne se passe rien pour eux.</strong> Leurs trois achats gardent le
+              prix d'origine jusqu'au bout.
+            </p>
+            <p>
+              La raison est structurelle : au démarrage d'un achat, le prix est
+              <strong>copié</strong> dans la ligne d'achat. Modifier le produit ne touche
+              donc que les <em>futurs</em> achats.
+            </p>
+            <p style="margin-bottom:0">
+              C'est la règle « prix garanti jusqu'au terme » de votre cahier des charges,
+              et elle n'est pas seulement une promesse commerciale : elle est tenue par la
+              façon dont la base est construite. Même un développeur pressé ne peut pas la
+              casser par inadvertance.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ============ 14 ============ -->
+    <section id="s14">
+      <span class="numero">Partie 14</span>
+      <h2>Résumé en une page</h2>
+
+      <div class="carte definition">
+        <span class="etiquette">Le projet</span>
+        <p style="margin-bottom:0">
+          Une application qui permet d'acheter en payant petit à petit par mobile money,
+          et de recevoir le produit une fois le montant complété. La plateforme garde
+          l'argent jusqu'à la livraison, ce qui protège à la fois le client et le vendeur.
+          Elle se rémunère par une commission de 5&nbsp;% incluse dans le prix affiché.
+        </p>
+      </div>
+
+      <div class="carte">
+        <span class="etiquette" style="color:var(--bleu)">Les trois morceaux</span>
+        <p style="margin-bottom:0">
+          <strong>L'application mobile</strong> (ce que voit le client) et
+          <strong>les espaces web</strong> (votre équipe, les vendeurs) parlent tous au
+          <strong>backend</strong>, qui contient toutes les règles et qui seul accède à la
+          <strong>base de données</strong>.
+        </p>
+      </div>
+
+      <div class="carte">
+        <span class="etiquette" style="color:var(--bleu)">La mécanique centrale</span>
+        <p style="margin-bottom:0">
+          Un versement passe par des états successifs : <em>initié</em> →
+          <em>en attente</em> → <em>validé</em>, <em>rejeté</em> ou
+          <em>en vérification</em>. Un humain vérifie le dépôt réel avant de valider.
+          Un dépôt réel n'est jamais perdu, quoi qu'il arrive.
+        </p>
+      </div>
+
+      <div class="carte retenir">
+        <span class="etiquette">Les trois règles d'or</span>
+        <p style="margin-bottom:0">
+          Une écriture validée ne change plus jamais · le solde est toujours recalculé
+          depuis les écritures · les interdits sont posés dans la base, pas seulement
+          dans le code.
+        </p>
+      </div>
+
+      <div class="carte attention">
+        <span class="etiquette">Où en est-on vraiment</span>
+        <p style="margin-bottom:0">
+          Le logiciel est écrit, documenté et testé — 25 critères automatiques, tous verts.
+          Mais il n'a <strong>jamais tourné sur un vrai téléphone</strong>, les SMS ne
+          partent pas encore, et les CGU ne sont pas validées juridiquement. Le
+          développement n'est plus le facteur limitant : les démarches le sont.
+        </p>
+      </div>
+
+      <h3>Pour aller plus loin dans le projet</h3>
+      <div class="tableau-enveloppe">
+        <table>
+          <thead><tr><th>Document</th><th>À lire quand…</th></tr></thead>
+          <tbody>
+            <tr><td><code>docs/guide-essai.md</code></td><td>vous voulez tester l'application maintenant</td></tr>
+            <tr><td><code>docs/exploitation.md</code></td><td>votre équipe doit valider des versements au quotidien</td></tr>
+            <tr><td><code>docs/backend.md</code></td><td>un développeur reprend le code</td></tr>
+            <tr><td><code>docs/api.md</code></td><td>on veut la liste exacte des 36 entrées</td></tr>
+            <tr><td><code>docs/schema-donnees.md</code></td><td>on veut comprendre la base en détail</td></tr>
+            <tr><td><code>docs/journal-de-developpement.md</code></td><td>on se demande « pourquoi ça a été fait comme ça ? »</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="carte" style="border-color:var(--bleu);border-width:2px">
+        <span class="etiquette" style="color:var(--bleu)">Le vrai test de votre compréhension</span>
+        <p style="margin-bottom:0">
+          Essayez d'expliquer à quelqu'un, en trois minutes et sans notes :
+          ce que fait Kayna Kayna Pay, pourquoi l'argent ne va pas directement au vendeur,
+          et ce qui se passe quand un client déclare un versement.
+          <br><br>
+          Si vous y arrivez, vous maîtrisez le projet. Si vous bloquez sur un point,
+          c'est exactement la partie à relire.
+        </p>
+      </div>
+    </section>
+
+    <div class="fin">
+      <p style="margin-bottom:.4rem">
+        <strong>Kayna Kayna Pay</strong> — « Kayan si djineh koy yan gandji »,
+        faire petit n'empêche pas d'avancer.
+      </p>
+      <p style="margin-bottom:0">
+        Guide rédigé en août 2026 à partir du code réel du projet. Les chiffres cités
+        (36 entrées d'API, 13 tables, 25 tests, 5 355 lignes) ont été relevés dans le
+        dépôt, pas estimés.
+      </p>
+    </div>
+
+  </main>
+</div>

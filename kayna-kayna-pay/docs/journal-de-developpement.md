@@ -75,7 +75,7 @@ Le test de bout en bout passe de 20 à **25 critères**, tous verts.
 
 ### Plateforme (`plateforme/`)
 
-Next.js + PostgreSQL + Socket.io. 33 routes d'API, 6 pages web, ~650 lignes de
+Next.js + PostgreSQL + Socket.io. 36 routes d'API, 9 pages web, ~650 lignes de
 logique métier dans `lib/`.
 
 | Bloc | Contenu |

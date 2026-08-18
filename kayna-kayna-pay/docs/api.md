@@ -1,7 +1,7 @@
 # Kayna Kayna Pay — Référence de l'API
 
 Livrable « API backend documentée » (cahier des charges §11). Cette référence
-décrit les 33 routes de l'API telles qu'elles sont implémentées dans
+décrit les 36 routes de l'API telles qu'elles sont implémentées dans
 `plateforme/pages/api/`.
 
 ## Conventions générales

@@ -32,12 +32,13 @@ figurent en illustration (exemple de prix, maquette d'écran) sont fictifs.
 
 | Document | Pour qui | Contenu |
 |---|---|---|
+| [`docs/comprendre-le-projet.html`](docs/comprendre-le-projet.html) | **débutants, nouveaux arrivants** | Tout le projet expliqué depuis zéro en 14 parties, avec analogies et exercices corrigés — à ouvrir dans un navigateur |
 | [`docs/presentation.md`](docs/presentation.md) | tous | Le projet dans son ensemble, sans technique |
 | [`docs/cahier-des-charges.md`](docs/cahier-des-charges.md) | tous | Exigences fonctionnelles et techniques v1.0 — **la référence** |
 | [`docs/guide-essai.md`](docs/guide-essai.md) | **pour commencer** | Tester le parcours complet sur un vrai téléphone avec Expo, pas à pas |
 | [`docs/exploitation.md`](docs/exploitation.md) | **équipe d'exploitation** | Procédure de validation des versements, gestion des litiges, sauvegardes, surveillance |
 | [`docs/backend.md`](docs/backend.md) | développeurs | Architecture du serveur, modules, parcours de versement, sécurité, recettes de développement |
-| [`docs/api.md`](docs/api.md) | développeurs | Référence des 33 routes de l'API, temps réel, codes d'erreur |
+| [`docs/api.md`](docs/api.md) | développeurs | Référence des 36 routes de l'API, temps réel, codes d'erreur |
 | [`docs/schema-donnees.md`](docs/schema-donnees.md) | développeurs | Tables, relations, invariants financiers, transactions |
 | [`docs/journal-de-developpement.md`](docs/journal-de-developpement.md) | tous | Ce qui a été construit, décisions et leurs raisons, écarts assumés, points de vigilance |
 | [`identite/README.md`](identite/README.md) | communication, développeurs | Logo et son sens, couleurs, typographie, ton, usages à éviter |
