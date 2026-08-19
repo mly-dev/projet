@@ -1,120 +1,271 @@
-# Guide d'essai — tester Kayna Kayna Pay sur un vrai téléphone
+# Guide d'essai — de zéro à l'application sur votre téléphone
 
-Ce guide vous fait dérouler **le parcours complet** : créer un compte, choisir un
-produit, faire un versement depuis le téléphone, le valider depuis l'espace
-administrateur, et voir le portefeuille se créditer en temps réel.
+Ce guide part du principe que **rien n'est installé** sur votre ordinateur. Il
+vous mène jusqu'au moment clé : un versement déclaré depuis le téléphone,
+validé par votre équipe, et le portefeuille crédité en direct.
 
-Comptez **20 à 30 minutes** la première fois. Aucun vrai dépôt mobile money
-n'est nécessaire : à ce stade, on simule.
+Comptez **45 minutes à 1 heure** la première fois, dont beaucoup d'attente
+pendant les téléchargements. Aucun vrai dépôt mobile money n'est nécessaire.
+
+Les commandes sont données pour **Windows** (invite de commandes `cmd`), avec la
+variante Linux/macOS quand elle diffère.
 
 ---
 
-## Ce qu'il vous faut
+## Table des matières
 
-- Un ordinateur avec **git**, **Node 18 ou plus** et **PostgreSQL** installés.
-- Un téléphone **Android** avec l'application **Expo Go** (gratuite, Play Store).
+1. [Ce qu'il vous faut](#1-ce-quil-vous-faut)
+2. [Installer les quatre outils](#2-installer-les-quatre-outils)
+3. [Créer la base de données](#3-créer-la-base-de-données)
+4. [Récupérer le projet](#4-récupérer-le-projet)
+5. [Démarrer la plateforme](#5-démarrer-la-plateforme)
+6. [Trouver l'adresse de votre ordinateur](#6-trouver-ladresse-de-votre-ordinateur)
+7. [Lancer l'application mobile](#7-lancer-lapplication-mobile)
+8. [Le scénario d'essai](#8-le-scénario-dessai)
+9. [Problèmes courants](#9-problèmes-courants)
+10. [Ce qui ne marchera pas encore](#10-ce-qui-ne-marchera-pas-encore)
+
+---
+
+## 1. Ce qu'il vous faut
+
+- Un ordinateur **Windows** (ou Mac/Linux), avec une connexion internet.
+- Un téléphone **Android**.
 - **Le téléphone et l'ordinateur sur le même réseau Wi-Fi.** C'est la condition
   la plus souvent oubliée : sans cela, rien ne fonctionnera.
 
-> Si votre ordinateur est branché en Ethernet et le téléphone en Wi-Fi, ils ne
-> sont pas forcément sur le même réseau. Dans le doute, mettez l'ordinateur en
-> Wi-Fi sur le même réseau que le téléphone.
+> ⚠️ Si votre ordinateur est branché en **Ethernet** et le téléphone en Wi-Fi,
+> ils peuvent être sur deux réseaux différents. Dans le doute, connectez
+> l'ordinateur au même Wi-Fi que le téléphone.
 
-### Si vous êtes sous Windows
+### Une règle pour tout le guide
 
-Les commandes de ce guide fonctionnent dans **PowerShell**, à deux réserves
-près :
-
-- **Tapez chaque commande sur une seule ligne.** Une commande longue coupée en
-  deux avec `\` en fin de ligne est une convention Linux : PowerShell ne la
-  comprend pas et vous obtiendrez
-  `fatal: repository '\' does not exist`. (Le caractère de continuation de
-  PowerShell est l'accent grave `` ` ``, mais le plus simple reste une seule
-  ligne.)
-- **La création de la base de données diffère** — voir l'étape 1.
+**Tapez chaque commande sur une seule ligne.** Une commande coupée en deux avec
+un `\` en fin de ligne est une convention Linux : `cmd` et PowerShell ne la
+comprennent pas et répondent
+`fatal: repository '\' does not exist`.
 
 ---
 
-## Étape 0 — Récupérer le projet
+## 2. Installer les quatre outils
 
-Le projet vit sur le dépôt **`mly-dev/projet`**, dans la branche
-**`claude/kayna-kayna-pay-presentation-gp4lgf`**.
+### 2.1 Node.js
 
-**Tapez la commande de clonage sur une seule ligne**, sans la couper :
+Le moteur qui exécute le code du projet.
 
-```bash
+1. Allez sur **<https://nodejs.org>**
+2. Téléchargez la version **LTS** (le gros bouton de gauche).
+3. Installez en gardant toutes les options par défaut.
+
+**Vérifiez** — ouvrez une **nouvelle** fenêtre `cmd` et tapez :
+
+```
+node --version
+```
+
+Vous devez voir `v20.x.x` ou `v22.x.x`. Si la commande n'est pas reconnue,
+fermez et rouvrez la fenêtre `cmd` (le PATH n'est pris en compte qu'au
+démarrage).
+
+### 2.2 Git
+
+L'outil qui récupère le code depuis GitHub.
+
+1. Allez sur **<https://git-scm.com/download/win>**
+2. Le téléchargement démarre seul. Installez en gardant les options par défaut.
+
+**Vérifiez** :
+
+```
+git --version
+```
+
+### 2.3 PostgreSQL — la base de données
+
+C'est l'étape la plus longue, et celle où l'on se trompe le plus. Lisez-la en
+entier avant de commencer.
+
+1. Allez sur
+   **<https://www.enterprisedb.com/downloads/postgres-postgresql-downloads>**
+2. Dans le tableau, prenez la ligne **17.x**, colonne **Windows x86-64**, et
+   cliquez sur la flèche de téléchargement bleue.
+
+> **Pourquoi la 17 et pas la 18 ?** La 18 est très récente et certains outils ne
+> la suivent pas encore. La 17 est stable et parfaitement compatible avec le
+> projet. Les versions 15 et 16 conviennent aussi.
+
+3. Lancez l'installateur. Gardez les valeurs par défaut, **sauf deux points à
+   surveiller** :
+
+| Écran | Ce qu'il faut faire |
+|---|---|
+| **Password** | Choisissez un mot de passe pour l'utilisateur `postgres` et **notez-le**. Il n'est pas récupérable, et vous en aurez besoin dans deux minutes. |
+| **Port** | Laissez **5432**. |
+| **Stack Builder** (dernier écran) | **Décochez la case** — inutile ici. |
+
+4. À la fin de l'installation, **ouvrez une nouvelle fenêtre `cmd`** et ajoutez
+   PostgreSQL au PATH pour cette session :
+
+```
+set PATH=%PATH%;C:\Program Files\PostgreSQL\17\bin
+```
+
+*(adaptez `17` si vous avez installé une autre version)*
+
+**Vérifiez** :
+
+```
+psql --version
+```
+
+> **Pour rendre l'ajout permanent** (recommandé, sinon il faut retaper la ligne
+> `set PATH` à chaque nouvelle fenêtre) : touche Windows → tapez
+> « variables d'environnement » → *Modifier les variables d'environnement système*
+> → *Variables d'environnement…* → dans **Path** (variables système) →
+> *Nouveau* → collez `C:\Program Files\PostgreSQL\17\bin` → OK partout →
+> **rouvrez `cmd`**.
+
+**Sur Linux / macOS**
+
+```
+sudo apt install postgresql          # Debian / Ubuntu
+brew install postgresql@17           # macOS
+```
+
+### 2.4 Expo Go — sur le téléphone
+
+Ouvrez le **Play Store** sur votre téléphone Android, cherchez **Expo Go** et
+installez-le. C'est gratuit. Il permet de faire tourner l'application sans la
+publier sur un store.
+
+---
+
+## 3. Créer la base de données
+
+Une seule fois, dans `cmd` :
+
+```
+psql -U postgres -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
+```
+
+```
+psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+```
+
+Chaque commande demande le **mot de passe `postgres`** défini à l'installation.
+
+> En le tapant, **rien ne s'affiche à l'écran** — pas même des étoiles. C'est
+> normal : tapez-le et validez par Entrée.
+
+Vous devez voir `CREATE ROLE` puis `CREATE DATABASE`.
+
+**Sur Linux / macOS**, préfixez chaque ligne par `sudo -u postgres` :
+
+```
+sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+```
+
+---
+
+## 4. Récupérer le projet
+
+Placez-vous où vous voulez ranger le projet, par exemple le Bureau :
+
+```
+cd %USERPROFILE%\Desktop
+```
+
+Puis clonez — **sur une seule ligne** :
+
+```
 git clone -b claude/kayna-kayna-pay-presentation-gp4lgf https://github.com/mly-dev/projet.git
 ```
 
-```bash
-cd projet/kayna-kayna-pay
-```
-
 > ⚠️ **N'oubliez pas l'option `-b`** : le travail est sur une branche, pas sur
-> `main`. Un clone sans cette option vous donnerait un dépôt sans le dossier
-> `kayna-kayna-pay/`.
+> `main`. Sans elle, vous obtiendriez un dépôt sans le dossier `kayna-kayna-pay`.
 
-Si le dépôt est privé, git vous demandera vos identifiants GitHub. Avec une clé
-SSH configurée, utilisez plutôt :
+Entrez dans le projet et vérifiez :
 
-```bash
-git clone -b claude/kayna-kayna-pay-presentation-gp4lgf git@github.com:mly-dev/projet.git
+```
+cd projet\kayna-kayna-pay
 ```
 
-**Vérifiez que vous avez bien tout** :
-
-```bash
-ls
-# docs  identite  mobile  pitch  plateforme  README.md
+```
+dir
 ```
 
-Si vous avez déjà cloné le dépôt auparavant, mettez-le simplement à jour :
+Vous devez voir : `docs`, `identite`, `mobile`, `pitch`, `plateforme`, `README.md`.
 
-```bash
-git fetch origin claude/kayna-kayna-pay-presentation-gp4lgf
-git checkout claude/kayna-kayna-pay-presentation-gp4lgf
+**Si vous aviez déjà cloné le projet**, mettez-le simplement à jour :
+
+```
 git pull origin claude/kayna-kayna-pay-presentation-gp4lgf
 ```
 
 ---
 
-## Étape 1 — Démarrer la plateforme
+## 5. Démarrer la plateforme
 
-Dans un premier terminal, **depuis le dossier `kayna-kayna-pay`** :
+Toujours dans la même fenêtre :
 
-```bash
+```
 cd plateforme
 ```
 
-**Créez la base de données** (une seule fois). Chaque commande tient sur une
-ligne.
-
-*Sous Windows (PowerShell)* — le mot de passe demandé est celui du compte
-`postgres` choisi à l'installation de PostgreSQL :
-
-```powershell
-psql -U postgres -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
-psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+```
+copy .env.example .env
 ```
 
-> Si PowerShell répond que `psql` n'est pas reconnu, l'outil n'est pas dans le
-> PATH. Ajoutez-le pour la session en cours (adaptez le numéro de version) :
-> `$env:Path += ";C:\Program Files\PostgreSQL\16\bin"`
+*(Linux / macOS : `cp .env.example .env`)*
 
-*Sous Linux ou macOS* :
-
-```bash
-sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
-sudo -u postgres psql -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
 ```
-
-**Puis, sur tous les systèmes** :
-
-```bash
-cp .env.example .env
 npm install
+```
+
+Comptez quelques minutes. Des avertissements `npm audit` peuvent s'afficher :
+**c'est normal, ignorez-les**.
+
+### Vérifiez que tout est en place
+
+```
+npm run verifier
+```
+
+Cette commande contrôle chaque prérequis et, si quelque chose manque, **affiche
+la commande exacte qui répare**. Vous devez obtenir :
+
+```
+  [OK]   Node 22.x
+  [OK]   Dépendances installées
+  [OK]   Fichier .env présent
+  [OK]   PostgreSQL joignable
+  [MANQUE] Structure de la base absente
+           Lancez :  npm run db:migrer
+```
+
+### Créez les tables et les données de démonstration
+
+```
 npm run db:migrer
+```
+
+```
 npm run db:seed
+```
+
+Le seed affiche les comptes de démonstration — **gardez-les sous la main** :
+
+| Rôle | Numéro | Mot de passe |
+|---|---|---|
+| Client | `+22791111111` | `client123` |
+| Admin | `+22790000010` | `admin123` |
+| Super-admin | `+22790000000` | `superadmin123` |
+| Partenaire | `+22792000001` | `partenaire123` |
+
+### Démarrez le serveur
+
+```
 npm run dev
 ```
 
@@ -124,211 +275,225 @@ Vous devez voir :
 Kayna Kayna Pay — plateforme démarrée sur http://localhost:3000
 ```
 
-**Laissez ce terminal ouvert et visible** : c'est là que s'afficheront les codes
-SMS pendant tout l'essai (voir plus bas).
+**Laissez cette fenêtre ouverte et visible.** C'est là que s'afficheront les
+codes SMS pendant tout l'essai.
 
-Vérifiez dans un navigateur que <http://localhost:3000> affiche la page de
-connexion avec le logo.
+Ouvrez <http://localhost:3000> dans votre navigateur : la page de connexion avec
+le logo doit apparaître.
 
 ---
 
-## Étape 2 — Trouver l'adresse IP de votre ordinateur
+## 6. Trouver l'adresse de votre ordinateur
 
 Pour votre téléphone, « localhost » désigne le téléphone lui-même. Il lui faut
 l'adresse de votre ordinateur sur le réseau local.
 
-| Système | Commande | Ce que vous cherchez |
-|---|---|---|
-| **Windows** | `ipconfig` | « Adresse IPv4 » de votre carte Wi-Fi |
-| **macOS** | `ipconfig getifaddr en0` | l'adresse affichée |
-| **Linux** | `hostname -I` | la première adresse |
+Ouvrez une **deuxième fenêtre `cmd`** :
 
-Vous obtiendrez quelque chose comme `192.168.1.10` ou `10.0.0.23`.
+```
+ipconfig
+```
 
-**Vérifiez que ça répond**, toujours depuis l'ordinateur :
+Cherchez la section de votre **carte Wi-Fi** et relevez
+l'**Adresse IPv4** — quelque chose comme `192.168.1.10`.
 
-```bash
+| Système | Commande |
+|---|---|
+| Windows | `ipconfig` → « Adresse IPv4 » du Wi-Fi |
+| macOS | `ipconfig getifaddr en0` |
+| Linux | `hostname -I` |
+
+**Vérifiez qu'elle répond** (remplacez par la vôtre) :
+
+```
 curl http://192.168.1.10:3000/api/categories
 ```
 
-Vous devez recevoir du JSON avec les catégories. Si vous n'obtenez rien, c'est
-votre pare-feu qui bloque le port 3000 — autorisez-le avant de continuer.
+Vous devez recevoir du texte commençant par `{"ok":true,...`. Si rien ne vient,
+c'est le **pare-feu Windows** : autorisez Node.js, ou désactivez temporairement
+le pare-feu du réseau privé le temps de l'essai.
 
 ---
 
-## Étape 3 — Lancer l'application
+## 7. Lancer l'application mobile
 
-Dans un **deuxième terminal** (le premier continue de faire tourner la
-plateforme), toujours depuis le dossier `kayna-kayna-pay` :
+Dans la deuxième fenêtre `cmd` :
 
-```bash
-cd mobile
+```
+cd %USERPROFILE%\Desktop\projet\kayna-kayna-pay\mobile
+```
+
+```
+copy .env.example .env
+```
+
+```
+notepad .env
+```
+
+Remplacez l'adresse par **la vôtre**, puis enregistrez et fermez :
+
+```
+EXPO_PUBLIC_API_URL=http://192.168.1.10:3000
+```
+
+Puis :
+
+```
 npm install
+```
 
-# Indiquez l'adresse trouvée à l'étape 2
-cp .env.example .env
-# puis ouvrez .env et remplacez l'adresse par la vôtre
-
+```
 npx expo start
 ```
 
-Un **QR code** s'affiche dans le terminal.
+Un **QR code** s'affiche. Sur le téléphone, ouvrez **Expo Go** → *Scan QR code*
+→ scannez.
 
-- **Android** : ouvrez Expo Go → « Scan QR code » → scannez.
-- **iPhone** : scannez avec l'appareil photo (Expo Go doit être installé).
+L'application se télécharge (quelques dizaines de secondes la première fois),
+puis l'écran de bienvenue apparaît avec le logo.
 
-L'application se télécharge sur le téléphone (quelques dizaines de secondes la
-première fois), puis l'écran de bienvenue s'affiche, logo compris.
-
-> **Si les versions se plaignent** au premier lancement :
-> `npx expo install --fix` puis relancez `npx expo start`.
+> **Si des erreurs de version apparaissent** : `npx expo install --fix`
+> puis relancez `npx expo start`.
 
 ---
 
-## Étape 4 — Où lire les codes SMS
+## 8. Le scénario d'essai
 
-La passerelle SMS réelle n'est pas encore branchée : **tous les codes
-s'affichent dans le terminal de la plateforme** (celui de l'étape 1), sous cette
-forme :
-
-```
-[SMS → +22796123456] Kayna Kayna Pay : votre code de vérification est 481923.
-```
-
-Gardez ce terminal sous les yeux : vous en aurez besoin trois fois — à
-l'inscription du client, et à chaque connexion administrateur.
-
----
-
-## Étape 5 — Le scénario complet
-
-Le plus intéressant se joue à deux écrans : **le téléphone** (le client) et **un
-navigateur** (votre équipe). Ouvrez les deux côte à côte.
+Le plus intéressant se joue **à deux écrans** : le téléphone (le client) et le
+navigateur (votre équipe). Gardez les deux sous les yeux.
 
 ### A. Sur le téléphone — créer un compte
 
 1. « Créer mon compte ».
-2. Numéro : mettez un **vrai format nigérien**, par exemple `96 12 34 56`
-   (le numéro n'a pas besoin d'exister, aucun SMS ne part réellement).
+2. Numéro : `96 12 34 56` par exemple (il n'a pas besoin d'exister, aucun SMS
+   ne part réellement).
 3. Nom, mot de passe (6 caractères minimum), puis **cochez les CGU** — sans
    cela l'inscription est refusée, c'est voulu.
 4. « Recevoir mon code par SMS ».
-5. **Lisez le code dans le terminal de la plateforme**, saisissez-le.
+5. **Lisez le code dans la fenêtre de la plateforme** :
+   `[SMS → +22796123456] … votre code de vérification est 481923.`
+6. Saisissez-le.
 
 ✅ Vous arrivez sur l'accueil, connecté.
 
-> Vous pouvez aussi vous connecter directement avec le compte de démonstration
-> `91 11 11 11` (`+22791111111`) / `client123`, qui a déjà des achats en cours.
+### B. Démarrer un achat
 
-### B. Sur le téléphone — démarrer un achat
+1. Cherchez « moto », ouvrez **Moto 125 cc**.
+2. Essayez le **simulateur** : saisissez `2000` dans « Si je verse chaque
+   jour » — il annonce le nombre de jours et la date de fin.
+3. « Commencer à payer ».
 
-1. Parcourez l'accueil, ouvrez une catégorie ou cherchez « moto ».
-2. Ouvrez **Moto 125 cc**.
-3. Sur la fiche, **essayez le simulateur** : saisissez `2000` dans « Si je verse
-   chaque jour » — il vous annonce le nombre de jours et la date de fin.
-4. « Commencer à payer ».
+✅ Le portefeuille s'ouvre à 0 F, avec le prix figé.
 
-✅ Votre portefeuille s'ouvre à 0 F, avec le prix figé.
+### C. Déclarer un versement
 
-### C. Sur le téléphone — déclarer un versement
-
-1. « Faire un versement ».
-2. Montant : `2500` (ou touchez une suggestion).
-3. Choisissez un opérateur, par exemple **NITA**.
-4. « Voir les instructions de dépôt ».
-
-✅ L'écran affiche le numéro de dépôt, le montant et **une référence unique**
-du type `KKP-4F7B2`.
-
-5. **Ne faites aucun vrai dépôt** — appuyez directement sur
+1. « Faire un versement », montant `2500`, opérateur **NITA**.
+2. « Voir les instructions de dépôt » → référence unique `KKP-XXXXX`.
+3. **Ne faites aucun vrai dépôt** — appuyez directement sur
    « J'ai effectué le dépôt ✓ ».
 
-✅ Vous arrivez sur la page d'attente, avec le minuteur de 10 minutes.
-**Laissez le téléphone sur cet écran.**
+✅ Page d'attente avec le minuteur de 10 minutes. **Laissez le téléphone ici.**
 
-### D. Sur le navigateur — valider en tant qu'administrateur
+### D. Sur le navigateur — valider
 
-1. Ouvrez <http://localhost:3000>.
-2. Connectez-vous : `+22790000010` / `admin123`.
-3. **Un code de connexion vous est demandé** — les comptes d'administration
-   exigent un deuxième facteur. Lisez-le dans le terminal de la plateforme.
-4. Vous arrivez sur la **file de validation**.
+1. <http://localhost:3000>, connectez-vous : `+22790000010` / `admin123`.
+2. **Un code de connexion est demandé** — les comptes d'administration exigent
+   un deuxième facteur. Lisez-le dans la fenêtre de la plateforme.
+3. Vous arrivez sur la **file de validation**.
 
-✅ **Le versement que vous venez de déclarer est déjà là**, apparu tout seul,
-sans rafraîchir la page. Vous voyez le nom du client, son numéro, le produit,
-l'opérateur, le montant et l'heure.
+✅ **Le versement est déjà là**, apparu tout seul, avec le nom du client, son
+numéro, le produit, l'opérateur, le montant et l'heure.
 
-5. Cliquez **Valider**. Une fenêtre demande le montant réellement reçu :
-   laissez `2500` et validez.
+4. Cliquez **Valider**, laissez le montant proposé, confirmez.
 
 ### E. Regardez le téléphone
 
-✅ **Sans rien toucher**, l'écran d'attente bascule sur « Versement validé ! 🎉 »
-et le portefeuille est crédité de 2 500 F.
+✅ **Sans rien toucher**, l'écran bascule sur « Versement validé ! 🎉 » et le
+portefeuille est crédité de 2 500 F.
 
-C'est le cœur du produit : le client sait, en quelques secondes, que son argent
+C'est le cœur du produit : le client sait en quelques secondes que son argent
 est bien arrivé.
 
-### F. Aller jusqu'au bout (facultatif mais parlant)
+### F. Aller au bout (facultatif)
 
-Recommencez un versement en saisissant cette fois **le montant restant** (visible
-sur le détail de l'achat). Après validation par l'admin :
+Refaites un versement du **montant restant** (visible sur le détail de l'achat).
+Après validation : l'achat passe **« complété »**, le partenaire est notifié, et
+un **récapitulatif valant preuve d'achat** devient disponible.
 
-- l'achat passe **« complété »** avec un message de félicitations ;
-- le partenaire est notifié ;
-- un **récapitulatif valant preuve d'achat** devient disponible.
-
----
-
-## Ce que vous pouvez tester d'autre
+### Autres cas à essayer
 
 | Cas | Comment | Résultat attendu |
 |---|---|---|
-| **Rejet d'un versement** | Déclarez un versement, puis « Rejeter » côté admin avec un motif | Le client reçoit le motif, peut relancer |
-| **Anti-doublon** | Essayez deux versements sur le même achat | Refusé : « Un versement est déjà en cours » |
-| **Montant différent** | Validez côté admin avec un montant autre que déclaré | Le portefeuille est crédité du montant réel |
-| **Versement minimum** | Essayez 50 F | Refusé : minimum 100 F |
-| **Notifications** | Onglet 🔔 du téléphone | Tout l'historique s'y trouve |
-| **Espace partenaire** | Navigateur privé, `+22792000001` / `partenaire123` | Tableau de bord, achats en cours, commandes |
-| **Demande d'annulation** | Détail d'un achat → « Demander l'annulation » | Apparaît côté admin, filtre « Demandes d'annulation » |
+| Rejet | Déclarez un versement, puis « Rejeter » avec un motif | Le client reçoit le motif et peut relancer |
+| Anti-doublon | Deux versements sur le même achat | Refusé : « un versement est déjà en cours » |
+| Montant différent | Validez avec un autre montant que déclaré | Le portefeuille est crédité du montant réel |
+| Versement minimum | Essayez 50 F | Refusé : minimum 100 F |
+| Espace partenaire | Navigateur privé, `+22792000001` / `partenaire123` | Tableau de bord et commandes |
 
 ---
 
-## Problèmes courants
+## 9. Problèmes courants
 
-| Symptôme | Cause | Solution |
+### La commande de diagnostic
+
+Au moindre doute côté plateforme, arrêtez le serveur (`Ctrl+C`) et lancez :
+
+```
+npm run verifier
+```
+
+Elle contrôle Node, les dépendances, le `.env`, PostgreSQL, les migrations et
+les données — et donne la commande qui répare chaque point manquant.
+
+### Tableau des erreurs
+
+| Message / symptôme | Cause | Solution |
 |---|---|---|
-| « Connexion impossible. Vérifiez votre réseau » | L'adresse dans `.env` est fausse, ou téléphone et ordinateur ne sont pas sur le même Wi-Fi | Refaites l'étape 2, vérifiez avec `curl` |
-| Le QR code ne se scanne pas | Expo Go pas installé, ou réseaux différents | Installez Expo Go ; essayez `npx expo start --tunnel` (plus lent mais traverse les réseaux) |
-| `curl` ne répond pas sur l'IP | Pare-feu | Autorisez le port 3000 en entrée |
-| Erreurs de versions au lancement | Dépendances désalignées avec le SDK | `npx expo install --fix` |
-| Je ne vois pas le code SMS | Mauvais terminal | C'est celui de la plateforme (étape 1), pas celui d'Expo |
-| « Session de connexion expirée » côté admin | Plus de 10 min entre mot de passe et code | Recommencez la connexion |
-| L'application affiche un écran blanc | Erreur JavaScript | Secouez le téléphone → « Reload » ; regardez le terminal Expo |
-| Rien n'apparaît dans la file admin | Vous n'avez pas appuyé sur « J'ai effectué le dépôt » | Le versement reste « initié » tant que le dépôt n'est pas déclaré |
-| `fatal: repository '\' does not exist` | Commande coupée en deux lignes dans PowerShell | Retapez-la **sur une seule ligne** |
-| `psql : terme non reconnu` (Windows) | PostgreSQL absent du PATH | `$env:Path += ";C:\Program Files\PostgreSQL\16\bin"` |
-| `password authentication failed for user "kkp"` | Base créée avec un autre mot de passe | Vérifiez `DATABASE_URL` dans `plateforme/.env` |
+| `fatal: repository '\' does not exist` | Commande coupée en deux lignes | Retapez-la **sur une seule ligne** |
+| `'cp' n'est pas reconnu` | `cp` n'existe pas dans `cmd` | Utilisez `copy` |
+| `'psql' n'est pas reconnu` | PostgreSQL absent du PATH | `set PATH=%PATH%;C:\Program Files\PostgreSQL\17\bin` |
+| `'node' / 'npm' n'est pas reconnu` | Fenêtre ouverte avant l'installation | Fermez et rouvrez `cmd` |
+| **PostgreSQL ne répond pas** | Service arrêté | Windows → « Services » → démarrez `postgresql-x64-17` |
+| **La base n'existe pas** | Étape 3 non faite | Refaites les deux commandes `psql -U postgres -c …` |
+| **Identifiants refusés** | Utilisateur `kkp` absent | Refaites la commande `CREATE USER` |
+| `password authentication failed` en créant la base | Mauvais mot de passe `postgres` | C'est celui choisi à l'installation de PostgreSQL |
+| Le QR code ne se scanne pas | Réseaux différents | Même Wi-Fi ; sinon `npx expo start --tunnel` |
+| « Connexion impossible » dans l'app | Mauvaise IP dans `mobile\.env` | Refaites l'étape 6, vérifiez avec `curl` |
+| `curl` ne répond pas sur l'IP | Pare-feu Windows | Autorisez Node.js dans le pare-feu |
+| Je ne vois pas le code SMS | Mauvaise fenêtre | C'est celle de la **plateforme**, pas celle d'Expo |
+| « Session de connexion expirée » (admin) | Plus de 10 min entre mot de passe et code | Recommencez la connexion |
+| Écran blanc dans l'app | Erreur JavaScript | Secouez le téléphone → « Reload » ; regardez la fenêtre Expo |
+| Rien n'arrive dans la file admin | « J'ai effectué le dépôt » non appuyé | Le versement reste « initié » tant qu'il n'est pas déclaré |
 
 ### Tester sur un émulateur plutôt qu'un téléphone
 
 Avec un émulateur Android, l'adresse de la machine hôte est `10.0.2.2` :
-mettez `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000` dans `mobile/.env`.
+mettez `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000` dans `mobile\.env`.
+
+### Repartir de zéro sur la base
+
+Si la base est dans un état incohérent :
+
+```
+psql -U postgres -c "DROP DATABASE kaynakaynapay;"
+psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+npm run db:migrer && npm run db:seed
+```
 
 ---
 
-## Ce qui ne marchera pas encore — c'est normal
+## 10. Ce qui ne marchera pas encore
 
-Pour éviter les fausses alertes, voici ce qui est **volontairement absent** à ce
-stade :
+Volontairement absent à ce stade — pour éviter les fausses alertes :
 
-- **Pas de vrais SMS** — la passerelle nigérienne n'est pas contractualisée.
-  Les codes s'affichent dans le terminal.
-- **Pas de photos de produits** — le catalogue est en texte. C'est le prochain
+- **Pas de vrais SMS.** La passerelle nigérienne n'est pas contractualisée ; les
+  codes s'affichent dans la fenêtre de la plateforme.
+- **Pas de photos de produits.** Le catalogue est en texte. C'est le prochain
   chantier fonctionnel.
-- **Pas de notifications hors application** — les notifications arrivent quand
-  l'application est ouverte ; Firebase Cloud Messaging n'est pas branché.
-- **Le partenaire ne gère pas son catalogue** — son espace est en consultation,
+- **Pas de notifications hors application.** Elles arrivent quand l'application
+  est ouverte ; Firebase Cloud Messaging n'est pas branché.
+- **Le partenaire ne gère pas son catalogue.** Son espace est en consultation,
   conformément au phasage du MVP.
 - **Les CGU affichées sont des projets de texte**, non validés juridiquement.
 
@@ -337,9 +502,9 @@ stade :
 ## Après l'essai
 
 Notez tout ce qui vous a gêné, même les petits détails : un mot mal choisi, un
-bouton trop petit, une étape peu claire. C'est précisément ce que cet essai doit
-faire remonter — le code fonctionne, ce sont les usages réels qui restent à
-vérifier.
+bouton trop petit, une étape peu claire. C'est exactement ce que cet essai doit
+faire remonter — le code fonctionne et il est testé, ce sont les usages réels
+qui restent à vérifier.
 
 La **recette officielle du MVP** (chapitre 13 du cahier des charges) demandera,
 elle, de refaire ce parcours **avec de vrais dépôts mobile money de faible

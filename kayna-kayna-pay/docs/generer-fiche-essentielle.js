@@ -50,7 +50,7 @@ const Pm = (morceaux, o = {}) =>
 
 const Titre = (texte) =>
   new Paragraph({
-    spacing: { before: 210, after: 110 },
+    spacing: { before: 175, after: 95 },
     children: [
       new TextRun({ text: texte, size: 24, bold: true, color: BLEU_F, font: "Calibri" }),
     ],
@@ -59,7 +59,7 @@ const Titre = (texte) =>
 const Puce = (morceaux, o = {}) =>
   new Paragraph({
     bullet: { level: 0 },
-    spacing: { after: 70, line: 276 },
+    spacing: { after: 58, line: 270 },
     children: (Array.isArray(morceaux) ? morceaux : [{ t: morceaux }]).map(
       (m) =>
         new TextRun({
@@ -99,7 +99,7 @@ function Encadre(lignes, fond, couleurTitre, titre) {
           new TableCell({
             width: { size: 9360, type: WidthType.DXA },
             shading: { type: ShadingType.CLEAR, fill: fond },
-            margins: { top: 130, bottom: 130, left: 180, right: 180 },
+            margins: { top: 110, bottom: 110, left: 180, right: 180 },
             children: [
               new Paragraph({
                 spacing: { after: 70 },
@@ -124,7 +124,7 @@ function Tab(entetes, lignes, largeurs) {
       new TableCell({
         width: { size: largeurs[i], type: WidthType.DXA },
         shading: { type: ShadingType.CLEAR, fill: CLAIR },
-        margins: { top: 90, bottom: 90, left: 140, right: 140 },
+        margins: { top: 72, bottom: 72, left: 140, right: 140 },
         children: [
           new Paragraph({
             children: [new TextRun({ text: h, size: 17, bold: true, color: BLEU_F, font: "Calibri" })],
@@ -139,7 +139,7 @@ function Tab(entetes, lignes, largeurs) {
         children: l.map((c, i) =>
           new TableCell({
             width: { size: largeurs[i], type: WidthType.DXA },
-            margins: { top: 90, bottom: 90, left: 140, right: 140 },
+            margins: { top: 72, bottom: 72, left: 140, right: 140 },
             children: [
               new Paragraph({
                 spacing: { line: 250 },
@@ -172,7 +172,7 @@ const doc = new Document({
   sections: [
     {
       properties: {
-        page: { margin: { top: 850, bottom: 560, left: 1000, right: 1000 } },
+        page: { margin: { top: 850, bottom: 620, left: 1000, right: 1000 } },
       },
       children: [
         // ---------- En-tête ----------
@@ -303,52 +303,49 @@ const doc = new Document({
         P("", { after: 110 }),
 
         // ---------- 7. Tester ----------
-        Titre("7.  Tester l'application"),
+        Titre("7.  Installer et tester"),
         Pm([
-          { t: "Prérequis : ", b: true },
-          { t: "Node 18+, PostgreSQL installé " },
-          { t: "et démarré", b: true },
-          { t: ", Expo Go sur le téléphone, PC et téléphone sur le même Wi-Fi. Commandes pour Windows (cmd)." },
-        ], { after: 110 }),
+          { t: "Commandes pour Windows (cmd). PC et téléphone sur le " },
+          { t: "même Wi-Fi", b: true },
+          { t: ". Guide détaillé pas à pas : " },
+          { t: "docs/guide-essai.md", b: true },
+          { t: "." },
+        ], { after: 100 }),
 
-        Pm([{ t: "① La base de données — une seule fois", b: true, c: BLEU_F }], { after: 60 }),
+        Pm([{ t: "\u2460  Installer les 4 outils", b: true, c: BLEU_F }], { after: 55 }),
+        Pm([
+          { t: "Node.js (version LTS) — nodejs.org   ·   Git — git-scm.com   ·   Expo Go sur le téléphone (Play Store)" },
+        ], { size: 17, after: 40 }),
+        Pm([
+          { t: "PostgreSQL 17", b: true },
+          { t: " — enterprisedb.com/downloads/postgres-postgresql-downloads, colonne Windows x86-64. " },
+          { t: "Notez le mot de passe « postgres » demandé", b: true },
+          { t: ", gardez le port 5432, décochez Stack Builder. Puis, dans cmd :" },
+        ], { size: 17, after: 45 }),
+        Cmd("set PATH=%PATH%;C:\\Program Files\\PostgreSQL\\17\\bin", 105),
+
+        Pm([{ t: "\u2461  Créer la base — une seule fois", b: true, c: BLEU_F }], { after: 55 }),
         Cmd('psql -U postgres -c "CREATE USER kkp WITH PASSWORD \'kkp\' CREATEDB;"'),
-        Cmd('psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"', 110),
+        Cmd('psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"', 105),
 
-        Pm([{ t: "② La plateforme", b: true, c: BLEU_F }], { after: 60 }),
+        Pm([{ t: "\u2462  La plateforme", b: true, c: BLEU_F }], { after: 55 }),
         Cmd("git clone -b claude/kayna-kayna-pay-presentation-gp4lgf https://github.com/mly-dev/projet.git"),
         Cmd("cd projet\\kayna-kayna-pay\\plateforme"),
         Cmd("copy .env.example .env"),
-        Cmd("npm install && npm run db:migrer && npm run db:seed && npm run dev", 110),
+        Cmd("npm install && npm run verifier"),
+        Cmd("npm run db:migrer && npm run db:seed && npm run dev", 105),
 
-        Pm([{ t: "③ L'application mobile — dans une 2ᵉ fenêtre", b: true, c: BLEU_F }], { after: 60 }),
+        Pm([{ t: "\u2463  L'application mobile — 2ᵉ fenêtre", b: true, c: BLEU_F }], { after: 55 }),
         Cmd("cd projet\\kayna-kayna-pay\\mobile"),
-        Cmd("copy .env.example .env"),
-        Cmd("npm install && npx expo start", 110),
+        Cmd("copy .env.example .env      puis mettez-y l'IP du PC (ipconfig)"),
+        Cmd("npm install && npx expo start", 95),
 
         Pm([
-          { t: "Avant de lancer Expo : ", b: true },
-          { t: "ouvrez " },
-          { t: "mobile\\.env", b: true },
-          { t: " et remplacez l'adresse par l'IP de votre PC (commande " },
-          { t: "ipconfig", b: true },
-          { t: ", ligne « Adresse IPv4 » du Wi-Fi). « localhost » ne marche pas depuis un téléphone." },
-        ], { after: 70 }),
-        Pm([
-          { t: "Les codes SMS ", b: true },
-          { t: "s'affichent dans la fenêtre de la plateforme (lignes « [SMS → +227… ] »), pas sur un vrai téléphone." },
-        ], { after: 30 }),
+          { t: "En cas de blocage : ", b: true },
+          { t: "npm run verifier", b: true, c: BLEU },
+          { t: " contrôle tout et affiche la commande qui répare. Les codes SMS s'affichent dans la fenêtre de la plateforme, pas sur un vrai téléphone." },
+        ], { size: 17, after: 40 }),
 
-        // ---------- Pied ----------
-        new Paragraph({
-          spacing: { before: 130, after: 0, line: 240 },
-          border: { top: { style: BorderStyle.SINGLE, size: 6, color: "D7E3EE" } },
-          children: [
-            new TextRun({ text: "Guide détaillé et documentation technique : dossier ", size: 16, color: GRIS, font: "Calibri" }),
-            new TextRun({ text: "docs/", size: 16, bold: true, color: GRIS, font: "Calibri" }),
-            new TextRun({ text: " du projet.", size: 16, color: GRIS, font: "Calibri" }),
-          ],
-        }),
       ],
     },
   ],
