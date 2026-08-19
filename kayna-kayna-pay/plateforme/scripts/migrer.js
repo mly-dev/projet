@@ -136,7 +136,67 @@ async function principal() {
   }
 }
 
+// Diagnostic : une erreur de connexion à la base est le cas le plus fréquent au
+// premier démarrage. Plutôt qu'un message technique (parfois vide), on explique
+// ce qui manque et on donne la commande qui répare.
+function expliquer(e) {
+  const url = process.env.DATABASE_URL || "postgres://kkp:kkp@localhost:5432/kaynakaynapay";
+  const socle = [
+    "",
+    "  Base visée : " + url.replace(/:\/\/([^:]+):[^@]*@/, "://$1:****@"),
+    "",
+  ];
+
+  if (e.code === "ECONNREFUSED" || /ECONNREFUSED/.test(e.message || "")) {
+    return socle.concat([
+      "  PostgreSQL ne répond pas. Deux causes possibles :",
+      "",
+      "   1. Il n'est pas installé  →  https://www.postgresql.org/download/",
+      "   2. Il est installé mais arrêté :",
+      "        Windows : ouvrez « Services », démarrez « postgresql-x64-… »",
+      "        Linux   : sudo service postgresql start",
+      "        macOS   : brew services start postgresql",
+      "",
+    ]);
+  }
+
+  if (e.code === "3D000") {
+    return socle.concat([
+      "  La base de données n'existe pas encore. Créez-la :",
+      "",
+      '    psql -U postgres -c "CREATE USER kkp WITH PASSWORD \'kkp\' CREATEDB;"',
+      '    psql -U postgres -c "CREATE DATABASE kaynakaynapay OWNER kkp;"',
+      "",
+      "  (sous Linux/macOS, préfixez chaque ligne par : sudo -u postgres)",
+      "",
+    ]);
+  }
+
+  if (e.code === "28P01" || e.code === "28000") {
+    return socle.concat([
+      "  Identifiants refusés par PostgreSQL.",
+      "",
+      "  Soit l'utilisateur « kkp » n'existe pas :",
+      '    psql -U postgres -c "CREATE USER kkp WITH PASSWORD \'kkp\' CREATEDB;"',
+      "",
+      "  Soit le mot de passe ne correspond pas : vérifiez DATABASE_URL dans le",
+      "  fichier .env (copiez .env.example si vous ne l'avez pas encore fait).",
+      "",
+    ]);
+  }
+
+  if (e.code === "ENOTFOUND" || e.code === "EAI_AGAIN") {
+    return socle.concat(["  L'adresse du serveur de base est introuvable. Vérifiez DATABASE_URL.", ""]);
+  }
+
+  return socle.concat([
+    "  Détail : " + (e.message || e.code || String(e)),
+    "",
+  ]);
+}
+
 principal().catch((e) => {
-  console.error("Migration interrompue —", e.message);
+  console.error("\n  ✗ Migration interrompue.");
+  console.error(expliquer(e).join("\n"));
   process.exit(1);
 });

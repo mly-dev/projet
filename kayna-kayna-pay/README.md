@@ -75,13 +75,24 @@ Trois entrées possibles selon le besoin : **exploiter le service au quotidien**
 git clone -b claude/kayna-kayna-pay-presentation-gp4lgf https://github.com/mly-dev/projet.git
 cd projet/kayna-kayna-pay
 
+# La base de données — À FAIRE EN PREMIER, une seule fois.
+# Windows : retirez « sudo -u postgres » et utilisez psql -U postgres
+sudo -u postgres psql -c "CREATE USER kkp WITH PASSWORD 'kkp' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE kaynakaynapay OWNER kkp;"
+
 # La plateforme
-cd plateforme && npm install && npm run db:migrer && npm run db:seed && npm run dev
+cd plateforme
+cp .env.example .env          # Windows (cmd) : copy .env.example .env
+npm install && npm run db:migrer && npm run db:seed && npm run dev
 
 # puis, dans un autre terminal, l'application mobile
-cd mobile && npm install && cp .env.example .env   # indiquez-y votre IP locale
-npx expo start
+cd mobile
+cp .env.example .env          # Windows (cmd) : copy .env.example .env
+npm install && npx expo start
 ```
+
+> Sans PostgreSQL démarré et sans la base créée, `db:migrer` s'arrête — il vous
+> dira quoi faire.
 
 **➜ Première fois ? Suivez [`docs/guide-essai.md`](docs/guide-essai.md)** : le
 parcours guidé de bout en bout, avec les pièges et les problèmes courants.
