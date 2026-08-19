@@ -371,8 +371,24 @@ navigateur (votre équipe). Gardez les deux sous les yeux.
 3. Nom, mot de passe (6 caractères minimum), puis **cochez les CGU** — sans
    cela l'inscription est refusée, c'est voulu.
 4. « Recevoir mon code par SMS ».
-5. **Lisez le code dans la fenêtre de la plateforme** :
-   `[SMS → +22796123456] … votre code de vérification est 481923.`
+5. **Lisez le code dans la fenêtre de la plateforme.** Il s'affiche dans un
+   encadré, en bas de la fenêtre :
+
+   ```
+     ┌──────────────────────────────────────────────────────────┐
+     │     SMS de développement — aucun message réel envoyé     │
+     │                    pour +22796123456                     │
+     │                                                          │
+     │                   CODE :  6 7 3 6 6 6                    │
+     │                                                          │
+     │      valable 10 minutes, utilisable une seule fois       │
+     └──────────────────────────────────────────────────────────┘
+   ```
+
+   > ⚠️ Les chiffres ci-dessus sont une **illustration**. Votre code est tiré au
+   > hasard à chaque demande. Ne recopiez jamais un code lu dans une
+   > documentation : il sera refusé.
+
 6. Saisissez-le.
 
 ✅ Vous arrivez sur l'accueil, connecté.
@@ -399,7 +415,8 @@ navigateur (votre équipe). Gardez les deux sous les yeux.
 
 1. <http://localhost:3000>, connectez-vous : `+22790000010` / `admin123`.
 2. **Un code de connexion est demandé** — les comptes d'administration exigent
-   un deuxième facteur. Lisez-le dans la fenêtre de la plateforme.
+   un deuxième facteur. Lisez-le dans l'encadré affiché **en bas** de la fenêtre
+   de la plateforme (c'est un nouveau code, différent de celui de l'inscription).
 3. Vous arrivez sur la **file de validation**.
 
 ✅ **Le versement est déjà là**, apparu tout seul, avec le nom du client, son
@@ -462,6 +479,7 @@ les données — et donne la commande qui répare chaque point manquant.
 | « Connexion impossible » dans l'app | Mauvaise IP dans `mobile\.env` | Refaites l'étape 6, vérifiez avec `curl` |
 | `curl` ne répond pas sur l'IP | Pare-feu Windows | Autorisez Node.js dans le pare-feu |
 | Je ne vois pas le code SMS | Mauvaise fenêtre | C'est celle de la **plateforme**, pas celle d'Expo |
+| **« Code invalide ou expiré »** | Code d'exemple recopié, code de plus de 10 min, ou code déjà utilisé | Cliquez « Recommencer », refaites la connexion, et lisez la **dernière** ligne `[SMS →` de la fenêtre de la plateforme |
 | « Session de connexion expirée » (admin) | Plus de 10 min entre mot de passe et code | Recommencez la connexion |
 | Écran blanc dans l'app | Erreur JavaScript | Secouez le téléphone → « Reload » ; regardez la fenêtre Expo |
 | Rien n'arrive dans la file admin | « J'ai effectué le dépôt » non appuyé | Le versement reste « initié » tant qu'il n'est pas déclaré |
