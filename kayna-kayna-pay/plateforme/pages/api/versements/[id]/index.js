@@ -1,7 +1,12 @@
 import { utilisateurRequis } from "../../../../lib/auth";
-import { query } from "../../../../lib/db";
+import { query, getParametre } from "../../../../lib/db";
 
-// Consultation d'un versement (page d'attente : repli si le socket est coupé).
+// Consultation d'un versement (page d'attente : repli si le socket est coupé,
+// et reprise d'un versement laissé « initié »).
+//
+// Le numéro de dépôt est renvoyé avec le versement : sans lui, un client qui
+// revient sur un versement initié n'a plus l'information la plus importante —
+// où envoyer l'argent.
 export default async function handler(req, res) {
   const user = await utilisateurRequis(req, res, ["client"]);
   if (!user) return;
@@ -14,5 +19,18 @@ export default async function handler(req, res) {
     [Number(req.query.id), user.id]
   );
   if (!r.rows.length) return res.status(404).json({ ok: false, erreur: "Versement introuvable." });
-  res.json({ ok: true, versement: r.rows[0] });
+
+  const versement = r.rows[0];
+  const numeros = await getParametre("numeros_depot", {});
+  res.json({
+    ok: true,
+    versement,
+    instructions: {
+      operateur: versement.operateur,
+      numero_depot: numeros[versement.operateur] || null,
+      montant: versement.montant_declare,
+      reference: versement.reference,
+      frais: "Les frais de dépôt mobile money sont à votre charge.",
+    },
+  });
 }

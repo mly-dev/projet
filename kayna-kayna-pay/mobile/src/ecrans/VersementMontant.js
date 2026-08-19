@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Alert } from "react-native";
-import { Ecran, Carte, Champ, Bouton } from "../composants/Base";
+import { View, Text } from "react-native";
+import { Ecran, Carte, Champ, Bouton, Puces, Segments, Alerte, Ligne } from "../composants/Base";
 import { api } from "../api/client";
-import { couleurs, fcfa, OPERATEURS } from "../theme";
+import { couleurs, texte, espace, rayon, fcfa, OPERATEURS } from "../theme";
 
 const SUGGESTIONS = [100, 500, 1000, 2500, 5000, 10000];
 
@@ -11,17 +11,23 @@ export default function VersementMontant({ route, navigation }) {
   const [montant, setMontant] = useState("");
   const [operateur, setOperateur] = useState("nita");
   const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState(null);
 
   const valeur = Number(montant.replace(/\D/g, "")) || 0;
+  const trop = valeur > reste;
+  const insuffisant = valeur > 0 && valeur < 100;
+  const solde = trop ? 0 : reste - valeur;
+  const solde_ = Math.max(0, solde);
 
   async function continuer() {
+    setErreur(null);
     setEnCours(true);
     const r = await api("/api/versements", {
       method: "POST",
       corps: { achat_id: achatId, montant: valeur, operateur },
     });
     setEnCours(false);
-    if (!r.ok) return Alert.alert("Impossible", r.erreur);
+    if (!r.ok) return setErreur(r.erreur);
     navigation.replace("VersementInstructions", {
       versementId: r.versement.id,
       achatId,
@@ -29,74 +35,98 @@ export default function VersementMontant({ route, navigation }) {
     });
   }
 
+  const suggestions = SUGGESTIONS.filter((s) => s <= Math.max(reste, 100)).map((s) => ({
+    cle: String(s),
+    libelle: fcfa(s),
+  }));
+  if (reste > 0 && !SUGGESTIONS.includes(reste)) {
+    suggestions.push({ cle: String(reste), libelle: `Tout solder — ${fcfa(reste)}` });
+  }
+
   return (
-    <Ecran titre="Faire un versement" retour navigation={navigation}>
+    <Ecran
+      titre="Faire un versement"
+      sousTitre="Vous choisissez le montant. Il n'y a aucun minimum imposé au-delà de 100 F."
+      retour
+      navigation={navigation}
+      pied={
+        <>
+          <Bouton
+            libelle={enCours ? "Préparation…" : "Voir les instructions de dépôt"}
+            onPress={continuer}
+            chargement={enCours}
+            desactive={valeur < 100 || trop}
+          />
+          <Text style={styles.piedNote}>
+            Rien n'est débité ici : l'étape suivante vous indique où déposer l'argent.
+          </Text>
+        </>
+      }
+    >
       <Carte>
-        <Text style={{ color: couleurs.encre, fontSize: 14 }}>
-          Reste à payer : <Text style={{ fontWeight: "800" }}>{fcfa(reste)}</Text>
-        </Text>
+        <Ligne libelle="Reste à payer sur cet achat" valeur={fcfa(reste)} fort dernier />
       </Carte>
 
+      {erreur ? <Alerte type="erreur">{erreur}</Alerte> : null}
+
       <Champ
-        libelle="Montant à verser (F CFA) — dès 100 F"
+        libelle="Montant à verser"
+        suffixe="F CFA"
         placeholder="Ex. 1 000"
         keyboardType="number-pad"
         value={montant}
-        onChangeText={setMontant}
+        onChangeText={(v) => { setMontant(v); setErreur(null); }}
+        erreur={
+          insuffisant ? "Le minimum est de 100 F."
+          : trop ? `C'est plus que le reste à payer (${fcfa(reste)}).`
+          : null
+        }
+        style={{ marginBottom: espace.md }}
       />
-      <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 12 }}>
-        {SUGGESTIONS.filter((s) => s <= Math.max(reste, 100)).map((s) => (
-          <TouchableOpacity
-            key={s}
-            style={{
-              backgroundColor: valeur === s ? couleurs.bleu : couleurs.bleuClair,
-              borderRadius: 999,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              marginRight: 8,
-              marginBottom: 8,
-            }}
-            onPress={() => setMontant(String(s))}
-          >
-            <Text style={{ color: valeur === s ? couleurs.blanc : couleurs.bleu, fontWeight: "700", fontSize: 13 }}>
-              {fcfa(s)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
 
-      <Text style={{ color: couleurs.gris, fontSize: 12.5, marginBottom: 6 }}>Je dépose avec</Text>
-      <View style={{ flexDirection: "row", marginBottom: 18 }}>
-        {OPERATEURS.map((op) => (
-          <TouchableOpacity
-            key={op.cle}
-            style={{
-              flex: 1,
-              backgroundColor: operateur === op.cle ? couleurs.bleu : couleurs.blanc,
-              borderWidth: 1,
-              borderColor: operateur === op.cle ? couleurs.bleu : couleurs.bord,
-              borderRadius: 10,
-              paddingVertical: 12,
-              marginRight: op.cle !== "wave" ? 8 : 0,
-              alignItems: "center",
-            }}
-            onPress={() => setOperateur(op.cle)}
-          >
-            <Text style={{ color: operateur === op.cle ? couleurs.blanc : couleurs.encre, fontWeight: "800" }}>
-              {op.nom}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Bouton
-        libelle={enCours ? "Préparation…" : "Voir les instructions de dépôt"}
-        onPress={continuer}
-        desactive={enCours || valeur < 100}
+      <Text style={styles.libelleGroupe}>Montants fréquents</Text>
+      <Puces
+        options={suggestions}
+        valeur={String(valeur)}
+        onChoisir={(c) => { setMontant(c); setErreur(null); }}
+        style={{ marginBottom: espace.xl }}
       />
-      <Text style={{ color: couleurs.gris, fontSize: 12, textAlign: "center", marginTop: 10 }}>
-        Les frais de dépôt mobile money sont à votre charge.
-      </Text>
+
+      <Text style={styles.libelleGroupe}>Je dépose avec</Text>
+      <Segments
+        options={OPERATEURS.map((o) => ({ cle: o.cle, libelle: o.nom }))}
+        valeur={operateur}
+        onChoisir={setOperateur}
+        style={{ marginBottom: espace.xl }}
+      />
+
+      {valeur >= 100 && !trop ? (
+        <Carte ton="bleu">
+          <Text style={styles.apercuTitre}>Après ce versement</Text>
+          <View style={styles.apercuLigne}>
+            <Text style={styles.apercuValeur}>{fcfa(solde_)}</Text>
+            <Text style={styles.apercuTexte}>
+              {solde_ === 0
+                ? "Votre achat sera entièrement payé — nous organiserons la remise. 🎉"
+                : "resteront à payer sur cet achat."}
+            </Text>
+          </View>
+        </Carte>
+      ) : null}
+
+      <Alerte type="attention">
+        Les frais de dépôt mobile money restent à votre charge : c'est l'opérateur qui les
+        prélève, pas Kayna Kayna Pay.
+      </Alerte>
     </Ecran>
   );
 }
+
+const styles = {
+  libelleGroupe: { ...texte.legende, color: couleurs.encre2, fontWeight: "700", marginBottom: espace.sm },
+  apercuTitre: { ...texte.legende, color: couleurs.encre2, fontWeight: "700", marginBottom: 6 },
+  apercuLigne: { flexDirection: "row", alignItems: "baseline", gap: espace.sm, flexWrap: "wrap" },
+  apercuValeur: { fontSize: 22, fontWeight: "900", color: couleurs.bleu, letterSpacing: -0.5 },
+  apercuTexte: { ...texte.petit, color: couleurs.encre, flex: 1, minWidth: 140 },
+  piedNote: { ...texte.legende, color: couleurs.encre3, textAlign: "center", marginTop: espace.sm },
+};

@@ -1,30 +1,62 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Alert } from "react-native";
-import { Ecran, Carte, Champ, Bouton, Chargement, Badge } from "../composants/Base";
+import {
+  Ecran, Carte, CarteSquelette, Champ, Bouton, Badge, Puces, Ligne, Alerte,
+} from "../composants/Base";
 import { api } from "../api/client";
-import { couleurs, fcfa } from "../theme";
+import { couleurs, texte, espace, rayon, fcfa, rythmeIndicatif } from "../theme";
+
+// Rythmes proposés au simulateur : ce sont les montants que les gens versent
+// réellement, du billet de 500 F à l'épargne du samedi. La liste s'adapte au
+// prix — proposer « 200 F par jour » pour une moto n'aiderait personne.
+function rythmesPour(prix) {
+  const echelle = [200, 500, 1000, 2000, 5000, 10000, 25000, 50000];
+  const suggere = (rythmeIndicatif(prix) || {}).rythme || 500;
+  const depart = Math.max(0, echelle.indexOf(suggere) - 1);
+  return echelle.slice(depart, depart + 5).map((v) => ({ cle: String(v), libelle: fcfa(v) }));
+}
+
+// Une durée se lit en jours, en semaines, en mois ou en années — jamais en
+// « 192 semaines ».
+function enClair(jours) {
+  if (jours <= 21) return `${jours} jour${jours > 1 ? "s" : ""}`;
+  if (jours <= 70) return `${Math.round(jours / 7)} semaines`;
+  if (jours <= 730) return `${Math.round(jours / 30)} mois`;
+  const annees = (jours / 365).toFixed(1).replace(".0", "").replace(".", ",");
+  return `${annees} ans`;
+}
 
 export default function FicheProduit({ route, navigation }) {
   const [produit, setProduit] = useState(null);
-  const [parJour, setParJour] = useState("500");
+  const [parJour, setParJour] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
   useEffect(() => {
-    api(`/api/produits/${route.params.id}`).then((r) => r.ok && setProduit(r.produit));
+    api(`/api/produits/${route.params.id}`).then((r) => {
+      if (!r.ok) return;
+      setProduit(r.produit);
+      // Rythme de départ proportionné au prix : le simulateur s'ouvre sur une
+      // durée crédible plutôt que sur « 1 344 jours ».
+      const suggere = rythmeIndicatif(r.produit.prix_affiche);
+      setParJour(String(suggere ? suggere.rythme : 500));
+    });
   }, [route.params.id]);
 
-  if (!produit) {
+  if (!produit || parJour === null) {
     return (
       <Ecran titre="Produit" retour navigation={navigation}>
-        <Chargement />
+        <CarteSquelette lignes={3} />
+        <CarteSquelette lignes={2} />
       </Ecran>
     );
   }
 
-  const montantJour = Number(parJour.replace(/\D/g, "")) || 0;
+  const montantJour = Number(String(parJour).replace(/\D/g, "")) || 0;
   const jours = montantJour > 0 ? Math.ceil(produit.prix_affiche / montantJour) : null;
   const dateFin = jours
-    ? new Date(Date.now() + jours * 24 * 3600 * 1000).toLocaleDateString("fr-FR")
+    ? new Date(Date.now() + jours * 24 * 3600 * 1000).toLocaleDateString("fr-FR", {
+        day: "numeric", month: "long", year: "numeric",
+      })
     : null;
 
   async function commencer() {
@@ -40,63 +72,132 @@ export default function FicheProduit({ route, navigation }) {
   }
 
   return (
-    <Ecran titre={produit.nom} retour navigation={navigation}>
+    <Ecran
+      titre={produit.nom}
+      retour
+      navigation={navigation}
+      pied={
+        <>
+          <Bouton
+            libelle={enCours ? "Ouverture…" : "Commencer à payer"}
+            variante="ambre"
+            onPress={commencer}
+            chargement={enCours}
+            desactive={!produit.disponible}
+          />
+          <Text style={styles.piedNote}>
+            Aucun engagement de montant ni de fréquence — vous versez quand vous voulez.
+          </Text>
+        </>
+      }
+    >
       <Carte>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <View style={{ flex: 1, paddingRight: 10 }}>
-            <Text style={{ fontSize: 17, fontWeight: "800", color: couleurs.encre }}>{produit.nom}</Text>
-            <Text style={{ color: couleurs.gris, marginTop: 4, fontSize: 13 }}>
-              Vendu par {produit.partenaire} · {produit.categorie}
-            </Text>
-          </View>
-          <Badge texte={produit.disponible ? "disponible" : "indisponible"} ton={produit.disponible ? "vert" : "rouge"} />
+          <Text style={[texte.titre, { color: couleurs.encre, flex: 1, paddingRight: espace.md }]}>
+            {produit.nom}
+          </Text>
+          <Badge
+            texte={produit.disponible ? "disponible" : "indisponible"}
+            ton={produit.disponible ? "vert" : "rouge"}
+          />
         </View>
-        <Text style={{ fontSize: 26, fontWeight: "900", color: couleurs.bleu, marginTop: 12 }}>
-          {fcfa(produit.prix_affiche)}
+        <Text style={styles.vendeur}>
+          Vendu par {produit.partenaire} · {produit.categorie}
         </Text>
-        <Text style={{ color: couleurs.gris, fontSize: 12, marginTop: 2 }}>
-          Prix garanti pendant toute la durée de votre achat. Commission plateforme incluse.
-        </Text>
+
+        <View style={styles.blocPrix}>
+          <Text style={styles.prix}>{fcfa(produit.prix_affiche)}</Text>
+          <Text style={styles.prixNote}>
+            Prix garanti pendant toute la durée de votre achat.{"\n"}
+            Commission de la plateforme déjà comprise — rien ne s'ajoute à la fin.
+          </Text>
+        </View>
       </Carte>
 
       {produit.description ? (
         <Carte>
-          <Text style={{ color: couleurs.encre, lineHeight: 21, fontSize: 14 }}>{produit.description}</Text>
-          <Text style={{ color: couleurs.gris, fontSize: 12.5, marginTop: 8 }}>
-            Remise : {produit.modalites_remise}
-          </Text>
+          <Text style={[texte.corps, { color: couleurs.encre }]}>{produit.description}</Text>
         </Carte>
       ) : null}
 
       <Carte>
-        <Text style={{ fontWeight: "800", color: couleurs.bleuFonce, marginBottom: 10, fontSize: 14.5 }}>
-          À votre rythme — simulez
+        <Text style={styles.titreBloc}>À votre rythme — simulez</Text>
+        <Text style={styles.aideBloc}>
+          Ce calcul est une projection, pas un engagement : rien ne vous oblige à verser tous les jours.
         </Text>
-        <Champ
-          libelle="Si je verse chaque jour (F CFA)…"
-          keyboardType="number-pad"
-          value={parJour}
-          onChangeText={setParJour}
+
+        <Puces
+          options={rythmesPour(produit.prix_affiche)}
+          valeur={String(montantJour)}
+          onChoisir={setParJour}
+          style={{ marginBottom: espace.md }}
         />
+        <Champ
+          libelle="Ou saisissez votre montant quotidien"
+          keyboardType="number-pad"
+          suffixe="F CFA"
+          value={String(parJour)}
+          onChangeText={setParJour}
+          style={{ marginBottom: espace.md }}
+        />
+
         {jours ? (
-          <Text style={{ color: couleurs.encre, fontSize: 14.5, lineHeight: 21 }}>
-            À <Text style={{ fontWeight: "800" }}>{fcfa(montantJour)}</Text> par jour, vous terminez en{" "}
-            <Text style={{ fontWeight: "800", color: couleurs.bleu }}>{jours} jours</Text> (vers le {dateFin}).
-          </Text>
+          <View style={styles.resultat}>
+            <View style={styles.resultatHaut}>
+              <Text style={styles.resultatJours}>{enClair(jours)}</Text>
+            </View>
+            <Text style={styles.resultatDetail}>
+              soit {jours} versement{jours > 1 ? "s" : ""} de {fcfa(montantJour)} — terminé vers le{" "}
+              <Text style={{ fontWeight: "800" }}>{dateFin}</Text>
+            </Text>
+          </View>
         ) : (
-          <Text style={{ color: couleurs.gris, fontSize: 13 }}>Saisissez un montant pour simuler.</Text>
+          <Text style={[texte.petit, { color: couleurs.encre3 }]}>
+            Saisissez un montant pour voir la durée.
+          </Text>
         )}
       </Carte>
 
-      <Bouton
-        libelle={enCours ? "Ouverture…" : "Commencer à payer"}
-        variante="ambre"
-        onPress={commencer}
-        desactive={enCours || !produit.disponible}
-      />
-      <Text style={{ color: couleurs.gris, fontSize: 12.5, textAlign: "center", marginTop: 10 }}>
-        Aucun engagement de montant ni de fréquence. Vous versez quand vous voulez.
-      </Text>
+      <Carte>
+        <Text style={styles.titreBloc}>Ce qui se passe ensuite</Text>
+        <Ligne libelle="Premier versement" valeur="dès 100 F" />
+        <Ligne libelle="Moyens de dépôt" valeur="NITA · Amana · Wave" />
+        <Ligne libelle="Validation d'un dépôt" valeur="≈ 10 minutes" />
+        <Ligne libelle="Remise du produit" valeur={produit.modalites_remise || "à convenir"} dernier />
+      </Carte>
+
+      <Alerte type="info">
+        Votre argent est conservé par Kayna Kayna Pay jusqu'à la remise du produit. En cas
+        d'annulation, il vous est restitué selon les conditions générales.
+      </Alerte>
     </Ecran>
   );
 }
+
+const styles = {
+  vendeur: { ...texte.petit, color: couleurs.encre3, marginTop: 4 },
+
+  blocPrix: {
+    marginTop: espace.lg,
+    backgroundColor: couleurs.bleuPale,
+    borderRadius: rayon.md,
+    padding: espace.lg,
+  },
+  prix: { ...texte.montant, color: couleurs.bleu },
+  prixNote: { ...texte.legende, color: couleurs.encre2, marginTop: 6, lineHeight: 16.5 },
+
+  titreBloc: { ...texte.sousTitre, color: couleurs.bleuNuit, marginBottom: 4 },
+  aideBloc: { ...texte.legende, color: couleurs.encre3, marginBottom: espace.md, lineHeight: 16 },
+
+  resultat: {
+    backgroundColor: couleurs.ambrePale,
+    borderRadius: rayon.md,
+    padding: espace.lg,
+    alignItems: "center",
+  },
+  resultatHaut: { flexDirection: "row", alignItems: "baseline", gap: 6 },
+  resultatJours: { fontSize: 30, fontWeight: "900", color: couleurs.ambreFonce, letterSpacing: -0.8 },
+  resultatDetail: { ...texte.petit, color: couleurs.encre, textAlign: "center", marginTop: 4 },
+
+  piedNote: { ...texte.legende, color: couleurs.encre3, textAlign: "center", marginTop: espace.sm },
+};
