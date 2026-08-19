@@ -28,8 +28,25 @@ Scannez le QR code avec Expo Go. Compte client de démonstration :
 `+22791111111` / `client123` — ou créez un compte : le code OTP s'affiche
 dans les journaux du serveur (passerelle SMS « console » en développement).
 
-Si les versions d'Expo installées divergent, `npx expo install --fix`
-aligne les dépendances natives sur le SDK.
+## Version du SDK
+
+Le projet suit le **SDK Expo 54** (React Native 0.81, React 19, React
+Navigation 7).
+
+Expo Go se met à jour tout seul sur les stores et **n'accepte que le SDK le plus
+récent** — sur iOS il est même impossible d'installer une version antérieure.
+Si vous voyez *« Project is incompatible with this version of Expo Go »*, le
+message indique le SDK attendu ; alignez le projet dessus :
+
+```bash
+npm install expo@^54.0.0     # la version indiquée par le message
+npx expo install --fix       # aligne toutes les autres dépendances
+npx expo start -c            # -c vide le cache
+```
+
+`npx expo install --fix` est la commande de référence : elle lit le SDK installé
+et remet chaque dépendance à la version que ce SDK attend. **Ne fixez jamais ces
+versions à la main.**
 
 ## Parcours couverts
 

@@ -382,8 +382,19 @@ Sur iPhone, scannez avec l'appareil photo.
 L'application se télécharge (quelques dizaines de secondes la première fois),
 puis l'écran de bienvenue apparaît avec le logo.
 
-> **Si des erreurs de version apparaissent** : `npx expo install --fix`
-> puis relancez `npx expo start`.
+> **« Project is incompatible with this version of Expo Go »** — Expo Go se met
+> à jour tout seul et n'accepte que le SDK le plus récent. Le message indique la
+> version attendue (par exemple SDK 54). Alignez le projet :
+>
+> ```
+> npm install expo@^54.0.0
+> npx expo install --fix
+> npx expo start -c
+> ```
+>
+> `npx expo install --fix` remet automatiquement chaque dépendance à la version
+> attendue par ce SDK. C'est la seule bonne façon de procéder — ne fixez pas ces
+> versions à la main.
 
 ---
 
