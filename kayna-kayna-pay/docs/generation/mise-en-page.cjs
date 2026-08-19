@@ -191,14 +191,23 @@ function Etape(numero, contenu, o = {}) {
   });
 }
 
-// Ligne de commande à recopier.
+// Ligne(s) de commande à recopier. Les retours à la ligne du texte source sont
+// conservés : une commande sur plusieurs lignes doit se recopier telle quelle.
 function Cmd(texte, o = {}) {
+  const lignes = String(texte).split("\n");
   return new Paragraph({
     spacing: { after: o.after == null ? 40 : o.after, line: 250 },
     shading: { type: ShadingType.CLEAR, fill: C.codeFond },
-    children: [
-      new TextRun({ text: "  " + texte, font: MONO, size: T.code, color: C.encre }),
-    ],
+    children: lignes.map(
+      (ligne, i) =>
+        new TextRun({
+          text: "  " + ligne,
+          break: i === 0 ? 0 : 1,
+          font: MONO,
+          size: T.code,
+          color: C.encre,
+        })
+    ),
   });
 }
 
