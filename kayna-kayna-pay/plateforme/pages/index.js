@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import { api, enregistrerSession } from "../client/api";
 
-// Connexion aux espaces web (administration et partenaires).
-// L'application mobile est le point d'entrée des clients.
+// Connexion aux espaces web (administration et partenaires). L'application
+// mobile est le point d'entrée des clients.
 //
 // Les comptes d'administration passent par un deuxième facteur : mot de passe,
 // puis code reçu par SMS (cahier des charges §10).
@@ -60,64 +61,83 @@ export default function Connexion() {
 
   return (
     <div className="connexion-fond">
-      <form className="connexion-boite" onSubmit={etape === "code" ? soumettreCode : soumettreIdentifiants}>
-        <img src="/logo-marque.svg" alt="" width={62} height={62} className="logo-connexion" />
+      <Head>
+        <title>Connexion — Kayna Kayna Pay</title>
+      </Head>
+
+      <form
+        className="connexion-boite"
+        onSubmit={etape === "code" ? soumettreCode : soumettreIdentifiants}
+      >
+        <img src="/logo-marque.svg" alt="" width={58} height={58} className="logo-connexion" />
         <div className="marque">KAYNA KAYNA PAY</div>
         <div className="devise">« Kayan si djineh koy yan gandji »</div>
 
         {etape === "identifiants" ? (
           <>
-            <label>Numéro de téléphone</label>
-            <input
-              value={telephone}
-              onChange={(e) => setTelephone(e.target.value)}
-              placeholder="+227 90 00 00 10"
-              autoFocus
-            />
-            <label>Mot de passe</label>
-            <input type="password" value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} />
-            <div style={{ marginTop: 18 }}>
-              <button className="bouton" style={{ width: "100%" }} disabled={enCours}>
-                {enCours ? "Connexion…" : "Se connecter"}
-              </button>
+            <div className="champ">
+              <label htmlFor="tel">Numéro de téléphone</label>
+              <input
+                id="tel"
+                value={telephone}
+                onChange={(e) => setTelephone(e.target.value)}
+                placeholder="+227 90 00 00 10"
+                autoComplete="username"
+                autoFocus
+              />
             </div>
+            <div className="champ">
+              <label htmlFor="mdp">Mot de passe</label>
+              <input
+                id="mdp"
+                type="password"
+                value={motDePasse}
+                onChange={(e) => setMotDePasse(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <button className="bouton large" disabled={enCours || !telephone || !motDePasse}>
+              {enCours ? "Connexion…" : "Se connecter"}
+            </button>
           </>
         ) : (
           <>
-            <div className="info" style={{ marginBottom: 14, textAlign: "center" }}>{info}</div>
-            <label>Code reçu par SMS</label>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="000000"
-              maxLength={6}
-              inputMode="numeric"
-              autoFocus
-              style={{ textAlign: "center", letterSpacing: 6, fontSize: 20 }}
-            />
-            <div style={{ marginTop: 18 }}>
-              <button className="bouton" style={{ width: "100%" }} disabled={enCours || code.length < 6}>
-                {enCours ? "Vérification…" : "Valider le code"}
-              </button>
+            <div className="alerte info" style={{ marginTop: 0, marginBottom: 16 }}>
+              {info}
             </div>
-            <div
-              className="info"
-              style={{ marginTop: 14, textAlign: "center", cursor: "pointer", color: "var(--bleu)" }}
-              onClick={() => {
-                setEtape("identifiants");
-                setCode("");
-                setErreur("");
-              }}
+            <div className="champ champ-code">
+              <label htmlFor="code">Code reçu par SMS</label>
+              <input
+                id="code"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="000000"
+                maxLength={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+              />
+              <div className="aide" style={{ textAlign: "center" }}>
+                Valable 10 minutes, utilisable une seule fois.
+              </div>
+            </div>
+            <button className="bouton large" disabled={enCours || code.length < 6}>
+              {enCours ? "Vérification…" : "Valider le code"}
+            </button>
+            <button
+              type="button"
+              className="bouton fantome"
+              style={{ width: "100%", marginTop: 8 }}
+              onClick={() => { setEtape("identifiants"); setCode(""); setErreur(""); }}
             >
               Recommencer
-            </div>
+            </button>
           </>
         )}
 
-        {erreur ? <div className="erreur">{erreur}</div> : null}
-        <div className="info" style={{ marginTop: 16, textAlign: "center" }}>
-          Espace administration et partenaires
-        </div>
+        {erreur ? <div className="alerte erreur">{erreur}</div> : null}
+
+        <div className="bas">Espace administration et partenaires</div>
       </form>
     </div>
   );

@@ -1,0 +1,12 @@
+{
+  "name": "kayna-kayna-pay-documents",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Génération des documents Kayna Kayna Pay (Word + PDF)",
+  "scripts": {
+    "tout": "node guide-utilisation.cjs && node comprendre.cjs && node essentiel.cjs"
+  },
+  "dependencies": {
+    "docx": "^9.0.0"
+  }
+}
