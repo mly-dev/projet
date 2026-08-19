@@ -1,7 +1,7 @@
 # Kayna Kayna Pay — Référence de l'API
 
 Livrable « API backend documentée » (cahier des charges §11). Cette référence
-décrit les 36 routes de l'API telles qu'elles sont implémentées dans
+décrit les 37 routes de l'API telles qu'elles sont implémentées dans
 `plateforme/pages/api/`.
 
 ## Conventions générales
@@ -70,6 +70,7 @@ des contenus sont publiques (rôle « visiteur » du cahier des charges §3).
 | `/api/auth/verifier-otp` | 20 / heure |
 | `/api/auth/reinitialiser` | 10 / heure |
 | `/api/auth/mot-de-passe-oublie` | 5 / heure |
+| `/api/auth/renvoyer-otp` | 5 / 15 min |
 
 ---
 
@@ -118,6 +119,26 @@ Vérifie le code reçu par SMS, marque le numéro comme vérifié et ouvre la se
 
 Erreurs : `400` code invalide ou expiré (validité 10 minutes, usage unique) ;
 `404` compte introuvable.
+
+### `POST /api/auth/renvoyer-otp` — public
+
+Renvoie le code de vérification d'inscription. Sans cette route, un client dont
+le SMS s'est perdu resterait bloqué sur l'écran de vérification.
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `telephone` | string | oui |
+
+```jsonc
+// 200 — réponse identique que le numéro existe ou non
+{ "ok": true, "message": "Si ce numéro est en attente de vérification, un nouveau code vient de partir." }
+```
+
+Le code n'est réellement envoyé que si un compte **non vérifié** porte ce
+numéro. La réponse ne le dit jamais : autrement, la route deviendrait un moyen
+de tester des numéros un par un.
+
+Erreurs : `400` numéro invalide ; `429` limite atteinte.
 
 ### `POST /api/auth/connexion` — public
 
@@ -401,8 +422,28 @@ file de l'espace administrateur (événement socket `file:nouveau`).
 
 ### `GET /api/versements/{id}`
 
-État d'un versement. Sert de **repli à la page d'attente** si la connexion
-socket est coupée (l'application interroge cette route toutes les 15 secondes).
+État d'un versement, **et ses instructions de dépôt**. Deux usages :
+
+- **repli de la page d'attente** si la connexion socket est coupée —
+  l'application interroge cette route toutes les 15 secondes ;
+- **reprise d'un versement resté « initié »** : sans les instructions, le client
+  qui revient sur ce versement aurait perdu l'information la plus importante,
+  le numéro où envoyer l'argent.
+
+```jsonc
+{
+  "ok": true,
+  "versement": { "id": 31, "reference": "KKP-5NFR4", "statut": "initie", "…": "…" },
+  "instructions": {
+    "operateur": "nita", "numero_depot": "+227 90 00 00 01",
+    "montant": 1000, "reference": "KKP-5NFR4",
+    "frais": "Les frais de dépôt mobile money sont à votre charge."
+  }
+}
+```
+
+Erreurs : `404` versement introuvable **ou appartenant à un autre client** — la
+requête filtre sur le client connecté.
 
 ---
 

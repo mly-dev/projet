@@ -69,6 +69,51 @@ l'application mobile et aux deux espaces web.
 
 Le test de bout en bout passe de 20 à **25 critères**, tous verts.
 
+### Août 2026 — Design des interfaces et collection documentaire
+
+Les deux interfaces sont reprises entièrement, puis les documents destinés au
+porteur du projet sont refaits dans une mise en page commune.
+
+**Espaces web** — système de design complet dans `globals.css` : palette,
+élévations, tuiles, badges d'état, boutons, modales (fermeture par Échap, piège
+au clavier, focus initial), notifications éphémères, squelettes de chargement,
+états vides. La validation d'un versement passe par une modale récapitulative
+qui prévient quand le montant reçu diffère du montant déclaré, et annonce quand
+le versement complète l'achat. Le rejet propose trois motifs pré-rédigés,
+puisque le client les lit.
+
+**Application mobile** — la bibliothèque de composants est reconstruite sur les
+jetons de `theme.js` : plus aucune couleur ni taille écrite au hasard dans un
+écran. Ajouts notables : anneau de progression (deux demi-disques pivotés, sans
+dépendance graphique supplémentaire), squelettes de chargement, états vides,
+pastille de notifications non lues partagée par un contexte.
+
+Trois défauts de fond ont été corrigés à cette occasion :
+
+- le **repère de durée** du catalogue était calculé à rythme fixe et annonçait
+  « 1 344 jours à 500 F » pour une moto. Il choisit désormais le plus petit
+  versement quotidien qui ramène l'échéance sous six mois, et s'exprime en
+  jours, semaines, mois ou années ;
+- `GET /api/versements/{id}` ne renvoyait pas les instructions de dépôt : un
+  client reprenant un versement resté « initié » perdait le numéro où envoyer
+  l'argent ;
+- il n'existait aucun moyen de **redemander le code d'inscription**. La route
+  `POST /api/auth/renvoyer-otp` comble ce manque, sans jamais révéler si le
+  numéro existe.
+
+**Vérification visuelle** — l'application a été rendue par `react-native-web` et
+parcourue de bout en bout au navigateur, écran par écran. Ce contrôle a révélé
+un plantage au démarrage : le thème de navigation avait été *remplacé* au lieu
+d'être *complété*, privant la barre d'onglets de sa table de polices. Un test
+d'empaquetage ne l'aurait pas vu — il compile parfaitement.
+
+**Documents** — `docs/generation/mise-en-page.cjs` porte désormais toute la mise
+en page (couverture, sommaire, en-tête, pied de page numéroté, encadrés,
+tableaux). Trois documents en découlent : *L'essentiel* (5 pages), *Comprendre
+Kayna Kayna Pay* (14 pages, nouveau) et le *Guide d'utilisation* (12 pages,
+nouveau). Un document n'y redéfinit jamais une couleur ni une taille : il
+assemble des blocs. C'est ce qui les rend homogènes.
+
 ---
 
 ## Ce qui a été construit
