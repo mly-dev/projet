@@ -303,6 +303,12 @@ l'**Adresse IPv4** — quelque chose comme `192.168.1.10`.
 | macOS | `ipconfig getifaddr en0` |
 | Linux | `hostname -I` |
 
+> ⚠️ **Windows affiche souvent plusieurs adresses.** Prenez celle de la
+> **Carte réseau sans fil Wi-Fi**, généralement en `192.168.x.x`. Ignorez les
+> autres : `vEthernet (Default Switch)` en `172.x.x.x` est un réseau virtuel
+> Hyper-V, et une carte `Ethernet` en `192.168.56.x` est en général un
+> adaptateur VirtualBox. Ni l'un ni l'autre n'est joignable depuis le téléphone.
+
 **Vérifiez qu'elle répond** (remplacez par la vôtre) :
 
 ```
@@ -347,8 +353,31 @@ npm install
 npx expo start
 ```
 
-Un **QR code** s'affiche. Sur le téléphone, ouvrez **Expo Go** → *Scan QR code*
-→ scannez.
+Un **QR code** s'affiche. **Avant de le scanner, lisez la ligne juste en
+dessous** :
+
+```
+› Metro waiting on exp://192.168.1.231:8081
+```
+
+L'adresse doit être **celle de votre Wi-Fi**. Si vous lisez
+`exp://127.0.0.1:8081`, le QR code désigne le téléphone lui-même et le scan
+échouera avec *« Could not connect to the server »*. C'est fréquent sur Windows
+quand Hyper-V, VirtualBox ou WSL sont installés : Expo se trompe de carte
+réseau. Corrigez ainsi — `Ctrl+C`, puis :
+
+```
+set REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.231
+```
+
+```
+npx expo start
+```
+
+*(remplacez par votre adresse ; sous Linux/macOS, `export` au lieu de `set`)*
+
+Sur le téléphone, ouvrez **Expo Go** → *Scan QR code* → scannez.
+Sur iPhone, scannez avec l'appareil photo.
 
 L'application se télécharge (quelques dizaines de secondes la première fois),
 puis l'écran de bienvenue apparaît avec le logo.
@@ -476,6 +505,7 @@ les données — et donne la commande qui répare chaque point manquant.
 | **Identifiants refusés** | Utilisateur `kkp` absent | Refaites la commande `CREATE USER` |
 | `password authentication failed` en créant la base | Mauvais mot de passe `postgres` | C'est celui choisi à l'installation de PostgreSQL |
 | Le QR code ne se scanne pas | Réseaux différents | Même Wi-Fi ; sinon `npx expo start --tunnel` |
+| **« Could not connect to the server »** avec `exp://127.0.0.1:8081` | Expo s'est trompé de carte réseau (Hyper-V, VirtualBox, WSL) | `set REACT_NATIVE_PACKAGER_HOSTNAME=<votre IP Wi-Fi>` puis relancez `npx expo start` |
 | « Connexion impossible » dans l'app | Mauvaise IP dans `mobile\.env` | Refaites l'étape 6, vérifiez avec `curl` |
 | `curl` ne répond pas sur l'IP | Pare-feu Windows | Autorisez Node.js dans le pare-feu |
 | Je ne vois pas le code SMS | Mauvaise fenêtre | C'est celle de la **plateforme**, pas celle d'Expo |
