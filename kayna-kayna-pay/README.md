@@ -50,9 +50,10 @@ quels. Ils sont produits par les scripts de [`docs/generation/`](docs/generation
 | [`docs/presentation.md`](docs/presentation.md) | tous | Le projet dans son ensemble, sans technique |
 | [`docs/cahier-des-charges.md`](docs/cahier-des-charges.md) | tous | Exigences fonctionnelles et techniques v1.0 — **la référence** |
 | [`docs/guide-essai.md`](docs/guide-essai.md) | **pour commencer** | Tester le parcours complet sur un vrai téléphone avec Expo, pas à pas |
+| [`docs/construire-application.md`](docs/construire-application.md) | **pour installer sans Expo Go** | Produire un APK et l'installer : chemin dans le nuage ou entièrement local |
 | [`docs/exploitation.md`](docs/exploitation.md) | **équipe d'exploitation** | Procédure de validation des versements, gestion des litiges, sauvegardes, surveillance |
 | [`docs/backend.md`](docs/backend.md) | développeurs | Architecture du serveur, modules, parcours de versement, sécurité, recettes de développement |
-| [`docs/api.md`](docs/api.md) | développeurs | Référence des 37 routes de l'API, temps réel, codes d'erreur |
+| [`docs/api.md`](docs/api.md) | développeurs | Référence des 39 routes de l'API, temps réel, codes d'erreur |
 | [`docs/schema-donnees.md`](docs/schema-donnees.md) | développeurs | Tables, relations, invariants financiers, transactions |
 | [`docs/journal-de-developpement.md`](docs/journal-de-developpement.md) | tous | Ce qui a été construit, décisions et leurs raisons, écarts assumés, points de vigilance |
 | [`identite/README.md`](identite/README.md) | communication, développeurs | Logo et son sens, couleurs, typographie, ton, usages à éviter |
@@ -72,12 +73,14 @@ Trois entrées possibles selon le besoin : **exploiter le service au quotidien**
 | Document de présentation | ✅ Rédigé (août 2026) |
 | Cahier des charges v1.0 | ✅ Rédigé — règles « à définir » à arbitrer |
 | Pitch deck | ✅ Généré à partir du document de présentation |
-| MVP plateforme (API, admin, partenaire) | ✅ Développé — 25/25 critères passent (`npm run smoke`) |
-| MVP application mobile (Expo, Android) | ✅ Développé — 16 écrans, parcours de versement complet, temps réel |
+| MVP plateforme (API, admin, partenaire) | ✅ Développé — 26/26 critères passent (`npm run smoke`) |
+| MVP application mobile (Expo, Android) | ✅ Développé — 16 écrans, parcours de versement complet, bandeaux en temps réel |
 | Identité visuelle (logo, charte) | ✅ Logo créé, décliné et intégré ; charte documentée |
 | Durcissement sécurité | ✅ Double authentification admin, session en cookie httpOnly, migrations versionnées |
 | Essai sur un vrai téléphone | ⬜ **À faire en priorité** — jamais lancée sur un appareil réel |
-| Photos de produits | ⬜ Champ prêt en base, upload à développer |
+| Photos de produits | ✅ Envoi depuis l'admin, réduites pour le forfait mobile — 18/18 (`npm run smoke:photos`) |
+| Application installable (APK) | ✅ Configurée et vérifiée — voir `docs/construire-application.md` |
+| Notifications hors application | ⬜ Passerelle push à mettre en place |
 | Cadre juridique (BCEAO/UEMOA) | ⬜ Consultation à engager avant tout lancement public |
 | CGU et politique de confidentialité | 🔶 Projets de texte intégrés (seed) — à faire valider juridiquement |
 | Pilote avec partenaires vérifiés | ⬜ Phase 2 |

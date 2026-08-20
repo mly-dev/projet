@@ -3,3 +3,10 @@ node_modules/
 dist/
 *.log
 .env
+
+# Projets natifs produits par « expo prebuild ». Ils se régénèrent à partir de
+# app.config.js à chaque construction : les versionner ferait diverger deux
+# sources de vérité, et toute modification faite à la main y serait écrasée
+# sans avertissement.
+/android/
+/ios/

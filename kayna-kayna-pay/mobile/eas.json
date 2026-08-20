@@ -1,0 +1,35 @@
+{
+  "cli": { "version": ">= 5.9.0", "appVersionSource": "local" },
+  "build": {
+    "//": [
+      "L'adresse du serveur est INSCRITE DANS L'APK au moment de la",
+      "construction : une application installée ne peut plus en changer.",
+      "Renseignez EXPO_PUBLIC_API_URL dans le profil avant de construire.",
+      "",
+      "Profil « essai » : un APK que l'on installe à la main, qui parle au PC",
+      "du bureau. Ne fonctionne que sur ce réseau Wi-Fi, plateforme allumée.",
+      "",
+      "Profil « production » : un AAB pour le Play Store, contre un serveur",
+      "https. Le trafic en clair y est automatiquement refusé (app.config.js)."
+    ],
+
+    "essai": {
+      "android": { "buildType": "apk" },
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://192.168.1.10:3000"
+      }
+    },
+
+    "production": {
+      "android": { "buildType": "app-bundle" },
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://remplacez-par-votre-domaine.example"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
