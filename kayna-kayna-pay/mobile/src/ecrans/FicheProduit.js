@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, ScrollView, Dimensions } from "react-native";
 import {
-  Ecran, Carte, CarteSquelette, Champ, Bouton, Badge, Puces, Ligne, Alerte,
+  Ecran, Carte, CarteSquelette, Champ, Bouton, Badge, Puces, Ligne, Alerte, Photo,
 } from "../composants/Base";
 import { useToast } from "../composants/Toasts";
 import { api } from "../api/client";
@@ -25,6 +25,51 @@ function enClair(jours) {
   if (jours <= 730) return `${Math.round(jours / 30)} mois`;
   const annees = (jours / 365).toFixed(1).replace(".0", "").replace(".", ",");
   return `${annees} ans`;
+}
+
+
+// Galerie de la fiche produit. Les photos défilent horizontalement, avec des
+// points de repère quand il y en a plusieurs — l'usage attendu sur un
+// téléphone, sans bibliothèque supplémentaire.
+function Galerie({ photos }) {
+  const [index, setIndex] = useState(0);
+  const largeur = Dimensions.get("window").width - espace.lg * 2;
+
+  return (
+    <View style={{ marginBottom: espace.md }}>
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(e) =>
+          setIndex(Math.round(e.nativeEvent.contentOffset.x / largeur))
+        }
+        style={{ borderRadius: rayon.lg }}
+      >
+        {photos.map((photo) => (
+          <Photo
+            key={photo.id}
+            source={photo.detail}
+            taille={largeur}
+            arrondi={rayon.lg}
+            style={{ height: Math.round(largeur * 0.78) }}
+          />
+        ))}
+      </ScrollView>
+
+      {photos.length > 1 ? (
+        <View style={styles.points}>
+          {photos.map((photo, i) => (
+            <View
+              key={photo.id}
+              style={[styles.point, i === index && styles.pointActif]}
+            />
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
 }
 
 export default function FicheProduit({ route, navigation }) {
@@ -97,6 +142,10 @@ export default function FicheProduit({ route, navigation }) {
         </>
       }
     >
+      {(produit.photos || []).length ? (
+        <Galerie photos={produit.photos} />
+      ) : null}
+
       <Carte>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <Text style={[texte.titre, { color: couleurs.encre, flex: 1, paddingRight: espace.md }]}>
@@ -182,6 +231,10 @@ export default function FicheProduit({ route, navigation }) {
 
 const styles = {
   vendeur: { ...texte.petit, color: couleurs.encre3, marginTop: 4 },
+
+  points: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: espace.sm },
+  point: { width: 6, height: 6, borderRadius: 3, backgroundColor: couleurs.bordFort },
+  pointActif: { backgroundColor: couleurs.bleu, width: 18 },
 
   blocPrix: {
     marginTop: espace.lg,

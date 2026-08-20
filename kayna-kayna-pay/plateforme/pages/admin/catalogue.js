@@ -15,6 +15,7 @@ export default function Catalogue() {
   const [categories, setCategories] = useState([]);
   const [partenaires, setPartenaires] = useState([]);
   const [modale, setModale] = useState(null); // "produit" | "categorie" | "partenaire"
+  const [photos, setPhotos] = useState(null); // produit dont on gère les photos
 
   const charger = useCallback(async () => {
     const [rp, rc, rpa] = await Promise.all([
@@ -119,10 +120,29 @@ export default function Catalogue() {
                 produits.map((p) => (
                   <tr key={p.id}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{p.nom}</div>
-                      {p.mis_en_avant ? (
-                        <span className="badge sans-point" style={{ marginTop: 3 }}>en avant</span>
-                      ) : null}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <button
+                          className="vignette-produit"
+                          onClick={() => setPhotos(p)}
+                          title={
+                            (p.photos || []).length
+                              ? "Gérer les photos"
+                              : "Aucune photo — cliquez pour en ajouter"
+                          }
+                        >
+                          {(p.photos || []).length ? (
+                            <img src={p.photos[0].vignette} alt="" />
+                          ) : (
+                            <span className="sans-photo">+</span>
+                          )}
+                        </button>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{p.nom}</div>
+                          {p.mis_en_avant ? (
+                            <span className="badge sans-point" style={{ marginTop: 3 }}>en avant</span>
+                          ) : null}
+                        </div>
+                      </div>
                     </td>
                     <td>{p.partenaire}</td>
                     <td className="secondaire">{p.categorie}</td>
@@ -140,6 +160,9 @@ export default function Catalogue() {
                         </button>
                         <button className="bouton fantome petit" onClick={() => basculer(p, "mis_en_avant")}>
                           {p.mis_en_avant ? "Retirer l'avant" : "Mettre en avant"}
+                        </button>
+                        <button className="bouton fantome petit" onClick={() => setPhotos(p)}>
+                          Photos ({(p.photos || []).length})
                         </button>
                       </div>
                     </td>
@@ -201,6 +224,14 @@ export default function Catalogue() {
         </div>
       </div>
 
+      {photos ? (
+        <ModalePhotos
+          produit={photos}
+          onFermer={() => setPhotos(null)}
+          onChange={charger}
+        />
+      ) : null}
+
       {modale === "produit" ? (
         <ModaleProduit
           categories={categories}
@@ -230,6 +261,140 @@ export default function Catalogue() {
 }
 
 // ── Ajout de produit ────────────────────────────────────────────────────────
+// Photos d'un produit : envoi, mise en avant, retrait.
+//
+// L'original n'est jamais conservé : le serveur en tire une vignette et un
+// grand format, et c'est tout. C'est ce qui rend le catalogue consultable sur
+// un forfait mobile — voir lib/medias.js.
+function ModalePhotos({ produit, onFermer, onChange }) {
+  const toast = useToast();
+  const [liste, setListe] = useState(produit.photos || []);
+  const [enCours, setEnCours] = useState(false);
+  const [survol, setSurvol] = useState(false);
+
+  async function envoyer(fichiers) {
+    const fichier = fichiers && fichiers[0];
+    if (!fichier) return;
+    if (!/^image\//.test(fichier.type)) {
+      return toast("erreur", "Ce n'est pas une image", "Choisissez un fichier JPEG, PNG ou WebP.");
+    }
+
+    setEnCours(true);
+    const formulaire = new FormData();
+    formulaire.append("photo", fichier);
+    // Envoi multipart : pas de JSON ici, le fichier partirait en base64 et
+    // gagnerait un tiers de son poids en route.
+    const reponse = await fetch(`/api/admin/produits/${produit.id}/photos`, {
+      method: "POST",
+      body: formulaire,
+      credentials: "include",
+    }).catch(() => null);
+    setEnCours(false);
+
+    const r = reponse ? await reponse.json().catch(() => ({})) : {};
+    if (!r.ok) return toast("erreur", "Envoi impossible", r.erreur || "Le serveur n'a pas répondu.");
+    setListe(r.photos);
+    onChange();
+    toast("succes", "Photo ajoutée", "Elle est réduite et allégée automatiquement pour l'application.");
+  }
+
+  async function retirer(photo) {
+    const r = await api(`/api/admin/produits/${produit.id}/photos`, {
+      method: "DELETE",
+      corps: { photo_id: photo.id },
+    });
+    if (!r.ok) return toast("erreur", "Retrait impossible", r.erreur);
+    setListe(r.photos);
+    onChange();
+  }
+
+  async function mettreEnTete(photo) {
+    const r = await api(`/api/admin/produits/${produit.id}/photos`, {
+      method: "PUT",
+      corps: { photo_id: photo.id },
+    });
+    if (!r.ok) return toast("erreur", "Modification impossible", r.erreur);
+    setListe(r.photos);
+    onChange();
+    toast("succes", "Photo principale changée", "C'est elle qui s'affiche dans le catalogue.");
+  }
+
+  return (
+    <Modale
+      titre="Photos du produit"
+      contexte={produit.nom}
+      onFermer={onFermer}
+      large
+      actions={<button className="bouton" onClick={onFermer}>Terminé</button>}
+    >
+      <div
+        className={`depot-photo ${survol ? "survol" : ""}`}
+        onDragOver={(e) => { e.preventDefault(); setSurvol(true); }}
+        onDragLeave={() => setSurvol(false)}
+        onDrop={(e) => { e.preventDefault(); setSurvol(false); envoyer(e.dataTransfer.files); }}
+      >
+        <input
+          id="fichier-photo"
+          type="file"
+          accept="image/*"
+          disabled={enCours || liste.length >= 5}
+          onChange={(e) => { envoyer(e.target.files); e.target.value = ""; }}
+        />
+        <label htmlFor="fichier-photo">
+          {enCours ? (
+            <>Traitement de l'image…</>
+          ) : liste.length >= 5 ? (
+            <>Cinq photos au maximum. Retirez-en une pour en ajouter une autre.</>
+          ) : (
+            <>
+              <strong>Choisir une photo</strong> ou la glisser ici
+              <span className="aide">
+                JPEG, PNG ou WebP · 12 Mo au maximum · elle sera réduite automatiquement
+              </span>
+            </>
+          )}
+        </label>
+      </div>
+
+      {liste.length === 0 ? (
+        <div className="vide" style={{ paddingTop: 18 }}>
+          <div className="titre">Aucune photo</div>
+          <div className="detail">
+            Un produit sans photo se vend mal : le client ne sait pas ce qu'il achète.
+          </div>
+        </div>
+      ) : (
+        <div className="grille-photos">
+          {liste.map((photo, i) => (
+            <figure key={photo.id} className={i === 0 ? "principale" : ""}>
+              <img src={photo.vignette} alt="" />
+              {i === 0 ? <span className="etiquette">Principale</span> : null}
+              <figcaption>
+                {i !== 0 ? (
+                  <button className="bouton fantome petit" onClick={() => mettreEnTete(photo)}>
+                    Mettre en tête
+                  </button>
+                ) : (
+                  <span className="secondaire">affichée au catalogue</span>
+                )}
+                <button className="bouton danger petit" onClick={() => retirer(photo)}>
+                  Retirer
+                </button>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+
+      <div className="alerte info" style={{ marginTop: 16 }}>
+        La première photo sert de vignette partout dans l'application. Les
+        données de localisation contenues dans le fichier sont effacées à
+        l'envoi.
+      </div>
+    </Modale>
+  );
+}
+
 function ModaleProduit({ categories, partenaires, onFermer, onFait }) {
   const toast = useToast();
   const [f, setF] = useState(VIDE_PRODUIT);

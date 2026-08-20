@@ -685,3 +685,130 @@ input:disabled, select:disabled { background: var(--surface-2); color: var(--enc
   body { background: #fff; }
   .carte { box-shadow: none; break-inside: avoid; }
 }
+
+/* ── Photos de produits ──────────────────────────────────────────────────
+   L'espace admin est le seul endroit où l'on manipule des images : ailleurs
+   elles ne sont que consultées. */
+
+.vignette-produit {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  padding: 0;
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  background: var(--bleu-pale);
+  overflow: hidden;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color .15s, box-shadow .15s;
+}
+.vignette-produit:hover { border-color: var(--bleu); box-shadow: var(--ombre-1); }
+.vignette-produit img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vignette-produit .sans-photo {
+  color: var(--encre-3);
+  font-size: 19px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.depot-photo {
+  border: 2px dashed var(--bord-fort);
+  border-radius: 12px;
+  background: var(--bleu-pale);
+  text-align: center;
+  transition: border-color .15s, background .15s;
+}
+.depot-photo.survol { border-color: var(--bleu); background: var(--bleu-clair); }
+.depot-photo input { position: absolute; opacity: 0; width: 0; height: 0; }
+.depot-photo label {
+  display: block;
+  padding: 26px 18px;
+  cursor: pointer;
+  color: var(--encre-2);
+  font-size: 14px;
+}
+.depot-photo label strong { color: var(--bleu); }
+.depot-photo label .aide {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--encre-3);
+}
+.depot-photo input:disabled + label { cursor: not-allowed; color: var(--encre-3); }
+
+.grille-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.grille-photos figure {
+  margin: 0;
+  border: 1px solid var(--bord);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  position: relative;
+}
+.grille-photos figure.principale { border-color: var(--bleu); border-width: 2px; }
+.grille-photos img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  background: var(--bleu-pale);
+}
+.grille-photos .etiquette {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--bleu);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.grille-photos figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 7px 8px;
+  border-top: 1px solid var(--bord);
+  font-size: 11.5px;
+}
+
+/* Indicateur de connexion temps réel, dans le pied de la barre latérale.
+   Une file figée par une coupure réseau se lit autrement comme une file
+   vide — et l'on croit qu'il n'y a rien à faire. */
+.lateral .etat-direct {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+.lateral .etat-direct .point {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 7px;
+}
+.lateral .etat-direct.en-ligne { color: #9FD8B4; }
+.lateral .etat-direct.en-ligne .point {
+  background: #4ADE80;
+  animation: pouls-direct 2s ease-in-out infinite;
+}
+.lateral .etat-direct.hors-ligne { color: #F3B4B0; }
+.lateral .etat-direct.hors-ligne .point { background: #E86A62; }
+
+@keyframes pouls-direct {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, .5); }
+  50% { opacity: .75; box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); }
+}

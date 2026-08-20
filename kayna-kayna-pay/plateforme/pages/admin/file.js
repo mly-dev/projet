@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
 import Coque from "../../composants/Coque";
 import Modale from "../../composants/Modale";
 import { useToast } from "../../composants/Toasts";
+import { useDirect } from "../../composants/Direct";
 import { api, fcfa } from "../../client/api";
 
 const ONGLETS = [
@@ -32,7 +32,7 @@ export default function FileValidation() {
   const [statut, setStatut] = useState("en_attente");
   const [versements, setVersements] = useState(null);
   const [stats, setStats] = useState(null);
-  const [direct, setDirect] = useState(false);
+  const { direct, surEvenement } = useDirect();
   const [aValider, setAValider] = useState(null);
   const [aRejeter, setARejeter] = useState(null);
 
@@ -54,28 +54,29 @@ export default function FileValidation() {
     charger(statut);
   }, [statut, charger]);
 
+  // La connexion temps réel appartient à la coquille : elle vit sur toutes les
+  // pages de l'administration, pas seulement ici. La file s'y abonne pour
+  // insérer la nouvelle ligne sans tout recharger.
   useEffect(() => {
     chargerStats();
-    const socket = io({ withCredentials: true });
-    socket.on("connect", () => setDirect(true));
-    socket.on("disconnect", () => setDirect(false));
-    socket.on("connect_error", () => setDirect(false));
-
-    socket.on("file:nouveau", (v) => {
+    return surEvenement((nom, v) => {
       chargerStats();
-      if (statutActuel.current !== "en_attente") return;
-      setVersements((actuels) =>
-        actuels && !actuels.some((x) => x.id === v.id) ? [...actuels, v] : actuels
-      );
-      toast("info", "Nouveau versement", `${v.client_nom} — ${fcfa(v.montant_declare)}`);
+      if (nom === "file:nouveau") {
+        if (statutActuel.current !== "en_attente") return;
+        setVersements((actuels) =>
+          actuels && !actuels.some((x) => x.id === v.id) ? [...actuels, v] : actuels
+        );
+        return;
+      }
+      charger(statutActuel.current);
     });
-    socket.on("file:traite", () => { charger(statutActuel.current); chargerStats(); });
-    socket.on("file:verification", () => { charger(statutActuel.current); chargerStats(); });
+  }, [charger, chargerStats, surEvenement]);
 
+  useEffect(() => {
     // Repli si le temps réel est coupé : rafraîchissement périodique.
     const rythme = setInterval(() => charger(statutActuel.current), 45000);
-    return () => { socket.close(); clearInterval(rythme); };
-  }, [charger, chargerStats, toast]);
+    return () => clearInterval(rythme);
+  }, [charger]);
 
   const enAttente = statut === "en_attente" || statut === "en_verification";
 
@@ -84,7 +85,6 @@ export default function FileValidation() {
       espace="admin"
       titre="File de validation des versements"
       sousTitre="Chaque versement déclaré apparaît ici en temps réel. Vérifiez la réception du dépôt sur le compte mobile money — montant, numéro émetteur, référence — puis validez ou rejetez."
-      aTraiter={stats ? stats.versements_a_traiter : 0}
     >
       {stats ? (
         <div className="tuiles">

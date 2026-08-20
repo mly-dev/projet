@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Image,
   StyleSheet,
   Animated,
   Easing,
@@ -15,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { couleurs, texte, espace, rayon, ombre } from "../theme";
+import { BASE_URL } from "../api/client";
 
 // Bibliothèque de composants de l'application. Un écran ne doit jamais
 // redéfinir une couleur, une taille de texte ou une ombre : tout vient d'ici,
@@ -504,6 +506,49 @@ export function CarteSquelette({ lignes = 2 }) {
         <Squelette key={i} hauteur={9} largeur={i === lignes - 1 ? "45%" : "88%"} style={{ marginTop: 10 }} />
       ))}
     </Carte>
+  );
+}
+
+// Photo de produit. Les adresses renvoyées par l'API sont relatives : elles
+// sont préfixées ici, une bonne fois, plutôt qu'à chaque écran.
+//
+// Un produit sans photo affiche le pictogramme de sa catégorie : mieux vaut un
+// repère visuel qu'un cadre gris, et le catalogue reste lisible tant que
+// l'équipe n'a pas fini de photographier les articles.
+export function Photo({ source, taille = 44, arrondi = rayon.md, repli = "🏷️", style }) {
+  const [echec, setEchec] = useState(false);
+  const uri = source ? (source.startsWith("http") ? source : BASE_URL + source) : null;
+
+  const cadre = [
+    {
+      width: taille,
+      height: taille,
+      borderRadius: arrondi,
+      backgroundColor: couleurs.bleuClair,
+      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    style,
+  ];
+
+  if (!uri || echec) {
+    return (
+      <View style={cadre}>
+        <Text style={{ fontSize: taille * 0.42 }}>{repli}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={cadre}>
+      <Image
+        source={{ uri }}
+        style={{ width: "100%", height: "100%" }}
+        resizeMode="cover"
+        onError={() => setEchec(true)}
+      />
+    </View>
   );
 }
 

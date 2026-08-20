@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import { Ecran, Carte, CarteSquelette, Champ, Bouton, Vide, Puces } from "../composants/Base";
+import { Ecran, Carte, CarteSquelette, Champ, Bouton, Vide, Puces, Photo } from "../composants/Base";
 import { api } from "../api/client";
 import { couleurs, texte, espace, rayon, fcfa, rythmeIndicatif } from "../theme";
 
@@ -101,7 +101,12 @@ export default function Recherche({ route, navigation }) {
             const rythme = rythmeIndicatif(p.prix_affiche);
             return (
               <Carte key={p.id} onPress={() => navigation.navigate("FicheProduit", { id: p.id })}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Photo
+                    source={(p.photos || [])[0] && p.photos[0].vignette}
+                    taille={52}
+                    style={{ marginRight: espace.md }}
+                  />
                   <View style={{ flex: 1, paddingRight: espace.md }}>
                     <Text style={styles.nom} numberOfLines={2}>{p.nom}</Text>
                     <Text style={styles.meta} numberOfLines={1}>

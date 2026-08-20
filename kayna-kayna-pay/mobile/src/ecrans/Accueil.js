@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { surNotification } from "../api/socket";
 import {
-  Ecran, Carte, CarteSquelette, Progression, Champ, Section, Vide, Bouton,
+  Ecran, Carte, CarteSquelette, Progression, Champ, Section, Vide, Bouton, Photo,
 } from "../composants/Base";
 import { api } from "../api/client";
 import { couleurs, texte, espace, rayon, ombre, fcfa, rythmeIndicatif } from "../theme";
@@ -199,9 +199,11 @@ export default function Accueil({ navigation }) {
           return (
             <Carte key={p.id} onPress={() => navigation.navigate("FicheProduit", { id: p.id })}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <View style={styles.vignette}>
-                  <Text style={{ fontSize: 20 }}>{icone(p.categorie_slug)}</Text>
-                </View>
+                <Photo
+                  source={(p.photos || [])[0] && p.photos[0].vignette}
+                  repli={icone(p.categorie_slug)}
+                  taille={46}
+                />
                 <View style={{ flex: 1, paddingHorizontal: espace.md }}>
                   <Text style={styles.produitNom} numberOfLines={1}>{p.nom}</Text>
                   <Text style={styles.partenaire} numberOfLines={1}>{p.partenaire}</Text>
@@ -244,10 +246,6 @@ const styles = {
   prix: { color: couleurs.bleu, fontWeight: "900", fontSize: 15.5 },
   prixNote: { color: couleurs.encre3, fontSize: 10.5, marginTop: 1 },
 
-  vignette: {
-    width: 44, height: 44, borderRadius: rayon.md,
-    backgroundColor: couleurs.bleuClair, alignItems: "center", justifyContent: "center",
-  },
 
   retraitTitre: { ...texte.sousTitre, color: couleurs.vert, marginBottom: 4 },
   retraitTexte: { ...texte.petit, color: couleurs.encre, lineHeight: 19 },

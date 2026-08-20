@@ -2,3 +2,8 @@ node_modules/
 .next/
 .env
 *.log
+
+# Photos de produits envoyées depuis l'espace admin. Ce sont des données
+# d'exploitation, pas du code : elles se sauvegardent avec la base, pas avec
+# le dépôt.
+medias/

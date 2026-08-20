@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import { utilisateur, deconnexion } from "../client/api";
+import { useDirect } from "./Direct";
 
 const LIENS_ADMIN = [
   ["/admin/file", "File de validation", "file"],
@@ -17,7 +18,7 @@ const LIENS_PARTENAIRE = [["/partenaire/tableau", "Tableau de bord"]];
 // Coquille commune des espaces web : barre latérale, garde d'affichage, titre
 // de page. La session réelle vit dans le cookie httpOnly et chaque route de
 // l'API revérifie le rôle côté serveur — cette garde n'est qu'un confort.
-export default function Coque({ espace, titre, sousTitre, aTraiter, children, actions }) {
+export default function Coque({ espace, titre, sousTitre, children, actions }) {
   const router = useRouter();
   const [pret, setPret] = useState(false);
   const [user, setUser] = useState(null);
@@ -61,12 +62,13 @@ export default function Coque({ espace, titre, sousTitre, aTraiter, children, ac
           {liens.map(([href, libelle, cle]) => (
             <Link key={href} href={href} className={router.pathname === href ? "actif" : ""}>
               <span>{libelle}</span>
-              {cle === "file" && aTraiter > 0 ? <span className="pastille">{aTraiter}</span> : null}
+              {cle === "file" ? <PastilleFile /> : null}
             </Link>
           ))}
         </nav>
 
         <div className="pied">
+          {espace === "admin" ? <EtatDirect /> : null}
           <div className="qui">{user.nom}</div>
           <div className="role">{roleLisible}</div>
           <button onClick={deconnexion}>Se déconnecter</button>
@@ -81,6 +83,25 @@ export default function Coque({ espace, titre, sousTitre, aTraiter, children, ac
         {sousTitre ? <div className="sous-titre">{sousTitre}</div> : null}
         {children}
       </main>
+    </div>
+  );
+}
+
+// Nombre de versements en attente, tenu à jour en direct sur toutes les pages.
+function PastilleFile() {
+  const { aTraiter } = useDirect();
+  if (!aTraiter) return null;
+  return <span className="pastille">{aTraiter}</span>;
+}
+
+// Sans cet indicateur, une file figée par une coupure réseau se lit comme une
+// file vide — et l'on croit qu'il n'y a rien à faire.
+function EtatDirect() {
+  const { direct } = useDirect();
+  return (
+    <div className={`etat-direct ${direct ? "en-ligne" : "hors-ligne"}`}>
+      <span className="point" />
+      {direct ? "Temps réel actif" : "Temps réel interrompu"}
     </div>
   );
 }
