@@ -8,8 +8,10 @@
 // commentaire « // » sous « build » — refusé, puisque tout ce qui s'y trouve
 // doit être un profil.
 //
-// Le validateur est celui d'eas-cli. S'il n'est pas installé, le contrôle
-// s'abstient plutôt que de faire semblant.
+// Le validateur est celui d'EAS, fourni par @expo/eas-json — une dépendance de
+// développement du projet, et non l'installation globale d'eas-cli : celle-ci
+// vit ailleurs et resterait introuvable, ce qui faisait taire le contrôle au
+// moment précis où il servait.
 const path = require("path");
 
 const RACINE = path.join(__dirname, "..");
@@ -17,11 +19,11 @@ const PROFILS = ["essai", "production"];
 
 let json;
 try {
-  json = require(path.join(RACINE, "node_modules", "@expo", "eas-json"));
+  json = require("@expo/eas-json");
 } catch (e) {
-  console.log("\n  eas-cli n'est pas installé — contrôle ignoré.");
-  console.log("  Pour l'activer :  npm install -g eas-cli\n");
-  process.exit(0);
+  console.log("\n  [FAUX] Le validateur @expo/eas-json est introuvable.");
+  console.log("         Lancez :  npm install\n");
+  process.exit(1);
 }
 
 (async () => {

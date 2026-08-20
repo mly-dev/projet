@@ -116,7 +116,30 @@ npm run verifier:eas
   eas.json est valide.
 ```
 
-### 3. Construire
+### 3. Le projet EAS
+
+À la toute première construction, EAS propose de créer le projet sur votre
+compte — répondez **oui**. Il affiche ensuite un identifiant :
+
+```
+✔ Created @votre-compte/kayna-kayna-pay
+  projectId: b9868c6f-db04-4ef8-80e5-09cf9c3d2ca9
+```
+
+Cet identifiant est **déjà inscrit** dans `app.config.js`, celui du compte qui a
+créé le projet. Si vous construisez sous un **autre compte Expo**, remplacez-le
+avant de lancer la construction :
+
+```
+set EAS_PROJECT_ID=votre-identifiant
+```
+
+> Pourquoi manuellement ? Parce que la configuration est dynamique
+> (`app.config.js`, et non `app.json`) : eas-cli sait la lire, pas y écrire. Il
+> s'arrête sinon sur *« Cannot automatically write to dynamic config »*. C'est
+> le prix du réglage automatique du trafic en clair, décrit plus haut.
+
+### 4. Construire
 
 ```
 cd C:\Users\PC\projet\kayna-kayna-pay\mobile
@@ -130,7 +153,7 @@ répondez oui, il la garde pour vous. Toutes les mises à jour futures devront
 Un lien s'affiche, puis un lien de téléchargement à la fin. Ouvrez-le
 depuis le téléphone, ou transférez le fichier.
 
-### 4. Installer sur le téléphone
+### 5. Installer sur le téléphone
 
 Android refuse par défaut les applications qui ne viennent pas du Play Store.
 Ouvrez le `.apk` : un message propose d'autoriser l'installation depuis cette

@@ -16,6 +16,14 @@
 // https:// n'emporte aucune permission superflue.
 
 const ADRESSE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+
+// Identifiant du projet EAS. Une configuration dynamique comme celle-ci ne peut
+// pas être écrite par eas-cli : il faut donc l'inscrire ici, sinon la première
+// construction s'arrête sur « Cannot automatically write to dynamic config ».
+// Ce n'est pas un secret — il figure dans le manifeste de toute application
+// Expo publiée. La variable d'environnement permet de construire le même code
+// sous un autre compte.
+const PROJET_EAS = process.env.EAS_PROJECT_ID || "b9868c6f-db04-4ef8-80e5-09cf9c3d2ca9";
 const enClair = ADRESSE.startsWith("http://");
 
 if (enClair) {
@@ -69,6 +77,7 @@ module.exports = {
       ],
     ],
     extra: {
+      eas: { projectId: PROJET_EAS },
       // Repris dans l'application pour afficher, en cas de panne, vers quel
       // serveur cet exemplaire a été construit.
       adresseServeur: ADRESSE,

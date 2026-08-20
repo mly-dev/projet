@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@expo/eas-json": "^22.0.0",
     "babel-preset-expo": "~54.0.0"
   }
 }
