@@ -3,7 +3,7 @@ import { View, Text, Pressable, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ecran, Carte, Champ, Bouton, Lien, Section, Alerte } from "../composants/Base";
 import { useToast } from "../composants/Toasts";
-import { api } from "../api/client";
+import { api, baseUrl } from "../api/client";
 import { useAuth } from "../contexte/Auth";
 import { couleurs, texte, espace, rayon, fcfa } from "../theme";
 
@@ -153,6 +153,18 @@ export default function Profil({ navigation }) {
         )}
       </Carte>
 
+      <Section titre="Réglages" />
+      <Carte style={{ paddingVertical: espace.xs }}>
+        <Pressable onPress={() => navigation.navigate("Serveur")} style={styles.rangee}>
+          <Text style={styles.rangeeIcone}>🌐</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rangeeTexte}>Adresse du serveur</Text>
+            <Text style={styles.rangeeDetail} numberOfLines={1}>{baseUrl()}</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+      </Carte>
+
       <Section titre="Informations" />
       <Carte style={{ paddingVertical: espace.xs }}>
         {LIENS.map(([icone, libelle, cle], i) => (
@@ -213,6 +225,7 @@ const styles = {
   rangeeBord: { borderBottomWidth: 1, borderBottomColor: couleurs.bleuPale },
   rangeeIcone: { fontSize: 16, width: 22, textAlign: "center" },
   rangeeTexte: { ...texte.corps, color: couleurs.encre, flex: 1 },
+  rangeeDetail: { ...texte.legende, color: couleurs.encre3, marginTop: 1 },
   chevron: { color: couleurs.encre3, fontSize: 22, fontWeight: "300" },
 
   version: { ...texte.legende, color: couleurs.encre3, textAlign: "center", marginTop: espace.xl },

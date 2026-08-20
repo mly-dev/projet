@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { BASE_URL } from "./client";
+import { baseUrl } from "./client";
 
 // Connexion temps réel : notifications instantanées (validation de versement,
 // achat complété…).
@@ -38,7 +38,7 @@ export function connecterSocket(jeton) {
   fermerSocket();
   changerEtat("connexion");
 
-  socket = io(BASE_URL, {
+  socket = io(baseUrl(), {
     auth: { jeton },
     // Le WebSocket seul échoue en silence derrière certains réseaux mobiles et
     // proxys : sans repli en polling, plus aucune notification n'arrive et rien
@@ -61,8 +61,8 @@ export function connecterSocket(jeton) {
     // Visible dans la console Expo : c'est la seule trace quand le temps réel
     // ne marche pas, et la cause est presque toujours l'adresse du serveur.
     console.warn(
-      `[socket] connexion impossible vers ${BASE_URL} — ${e.message}. ` +
-        "Vérifiez EXPO_PUBLIC_API_URL : le téléphone doit joindre l'IP du PC, pas localhost."
+      `[socket] connexion impossible vers ${baseUrl()} — ${e.message}. ` +
+        "Le téléphone doit joindre l'IP de l'ordinateur, pas localhost — corrigez l'adresse du serveur depuis le profil."
     );
   });
 

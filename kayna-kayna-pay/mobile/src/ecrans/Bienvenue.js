@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bouton } from "../composants/Base";
+import { Bouton, Lien } from "../composants/Base";
 import { couleurs, espace, rayon } from "../theme";
 
 // Premier écran : il doit répondre en dix secondes à « c'est quoi, et
@@ -49,6 +49,11 @@ export default function Bienvenue({ navigation }) {
             libelle="J'ai déjà un compte"
             variante="secondaire"
             onPress={() => navigation.navigate("Connexion")}
+          />
+          <Lien
+            libelle="Configurer l'adresse du serveur"
+            onPress={() => navigation.navigate("Serveur")}
+            style={{ color: "#9FBEDA", fontSize: 12.5, marginTop: espace.lg }}
           />
           <Text style={styles.slogan}>« Kayan si djineh koy yan gandji »</Text>
           <Text style={styles.sloganTr}>Faire petit n'empêche pas d'avancer</Text>

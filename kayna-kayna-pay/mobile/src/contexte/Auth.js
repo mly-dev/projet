@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { api, enregistrerSession, sessionEnregistree, effacerSession } from "../api/client";
+import { api, enregistrerSession, sessionEnregistree, effacerSession, chargerAdresse } from "../api/client";
 import { connecterSocket, fermerSocket } from "../api/socket";
 
 const ContexteAuth = createContext(null);
@@ -10,6 +10,9 @@ export function FournisseurAuth({ children }) {
 
   useEffect(() => {
     (async () => {
+      // L'adresse enregistrée par l'utilisateur doit être connue avant la
+      // première requête, sinon la session serait cherchée au mauvais endroit.
+      await chargerAdresse();
       const session = await sessionEnregistree();
       if (session) {
         setUtilisateur(session.utilisateur);

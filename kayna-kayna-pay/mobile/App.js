@@ -28,6 +28,7 @@ import VersementAttente from "./src/ecrans/VersementAttente";
 import Notifications from "./src/ecrans/Notifications";
 import Profil from "./src/ecrans/Profil";
 import Contenu from "./src/ecrans/Contenu";
+import Serveur from "./src/ecrans/Serveur";
 
 const Pile = createNativeStackNavigator();
 const Onglets = createBottomTabNavigator();
@@ -142,6 +143,7 @@ function Navigation() {
             <Pile.Screen name="VersementInstructions" component={VersementInstructions} />
             <Pile.Screen name="VersementAttente" component={VersementAttente} />
             <Pile.Screen name="Contenu" component={Contenu} />
+            <Pile.Screen name="Serveur" component={Serveur} />
           </>
         ) : (
           <>
@@ -151,6 +153,7 @@ function Navigation() {
             <Pile.Screen name="Connexion" component={Connexion} />
             <Pile.Screen name="MotDePasseOublie" component={MotDePasseOublie} />
             <Pile.Screen name="Contenu" component={Contenu} />
+            <Pile.Screen name="Serveur" component={Serveur} />
           </>
         )}
       </Pile.Navigator>

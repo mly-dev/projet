@@ -26,6 +26,25 @@ plateforme sur un serveur accessible depuis Internet, en `https://`**, puis
 construire l'APK contre cette adresse. Tant que ce n'est pas fait, un APK ne
 sert qu'à l'essai, sur votre réseau.
 
+### L'adresse reste modifiable dans l'application
+
+L'adresse inscrite à la construction n'est qu'un **point de départ**. Les box
+attribuent les adresses dynamiquement : le jour où l'ordinateur en change,
+un APK figé serait définitivement muet, et il faudrait le reconstruire pour un
+chiffre qui a bougé.
+
+L'application permet donc de la corriger, sans rien réinstaller :
+
+- **avant connexion** : « Configurer l'adresse du serveur », sous les boutons
+  de l'écran d'accueil — indispensable, puisque sans serveur joignable on ne
+  peut pas se connecter pour aller la changer ;
+- **après connexion** : onglet Profil → Réglages → « Adresse du serveur ».
+
+L'écran accepte une simple adresse IP (`192.168.1.10`) : le `http://` et le
+port 3000 sont ajoutés seuls. Le bouton **« Tester cette adresse »** interroge
+la plateforme avant d'enregistrer, et répond soit *« Plateforme jointe,
+6 catégories au catalogue »*, soit la raison exacte de l'échec.
+
 ---
 
 ## Le piège qui fait échouer le premier APK
