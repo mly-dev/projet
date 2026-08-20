@@ -103,6 +103,19 @@ Ouvrez `mobile/eas.json` et remplacez l'adresse du profil `essai` :
 > C'est **la seule ligne à changer**. Une erreur ici et l'APK ne joindra
 > jamais le serveur.
 
+Contrôlez le fichier avant de lancer la construction — cela évite de découvrir
+une faute après quinze minutes d'attente :
+
+```
+npm run verifier:eas
+```
+
+```
+  [OK]   essai        apk         http://192.168.1.231:3000
+  [OK]   production   app-bundle  https://…
+  eas.json est valide.
+```
+
 ### 3. Construire
 
 ```
