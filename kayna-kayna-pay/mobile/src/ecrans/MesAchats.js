@@ -1,10 +1,11 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   Ecran, Carte, CarteSquelette, Progression, Badge, Vide, Bouton, Puces, Section,
 } from "../composants/Base";
 import { api } from "../api/client";
+import { surNotification } from "../api/socket";
 import { couleurs, texte, espace, fcfa, ETATS_ACHAT } from "../theme";
 
 const FILTRES = [
@@ -25,6 +26,10 @@ export default function MesAchats({ navigation }) {
   }, []);
 
   useFocusEffect(useCallback(() => { charger(); }, [charger]));
+
+  // Même raison qu'à l'accueil : la progression doit avancer sous les yeux du
+  // client au moment où son versement est validé.
+  useEffect(() => surNotification(() => charger()), [charger]);
 
   const visibles = (achats || []).filter((a) =>
     filtre === "tous" ? true : filtre === "actifs" ? ACTIFS.includes(a.statut) : !ACTIFS.includes(a.statut)

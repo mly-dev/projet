@@ -8,6 +8,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { FournisseurAuth, useAuth } from "./src/contexte/Auth";
 import { FournisseurNotifications, useNotifications } from "./src/contexte/Notifications";
+import { FournisseurToasts } from "./src/composants/Toasts";
+import { refNavigation } from "./src/navigation";
 import { couleurs } from "./src/theme";
 
 import Bienvenue from "./src/ecrans/Bienvenue";
@@ -68,14 +70,6 @@ function IconeOnglet({ nom, focused }) {
 
 function OngletsPrincipaux() {
   return (
-    <FournisseurNotifications>
-      <BarreOnglets />
-    </FournisseurNotifications>
-  );
-}
-
-function BarreOnglets() {
-  return (
     <Onglets.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
@@ -135,8 +129,8 @@ function Navigation() {
   const { chargement, utilisateur } = useAuth();
   if (chargement) return <Amorcage />;
 
-  return (
-    <NavigationContainer theme={THEME_NAVIGATION}>
+  const arbre = (
+    <NavigationContainer ref={refNavigation} theme={THEME_NAVIGATION}>
       <Pile.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
         {utilisateur ? (
           <>
@@ -162,15 +156,28 @@ function Navigation() {
       </Pile.Navigator>
     </NavigationContainer>
   );
+
+  // Le suivi des notifications enveloppe toute la navigation, et non les seuls
+  // onglets : un versement peut être validé pendant que le client est sur
+  // l'écran de dépôt, qui n'appartient pas aux onglets.
+  return utilisateur ? (
+    <FournisseurNotifications>{arbre}</FournisseurNotifications>
+  ) : (
+    arbre
+  );
 }
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <FournisseurAuth>
-        <StatusBar style="light" />
-        <Navigation />
-      </FournisseurAuth>
+      {/* Les toasts sont montés au-dessus de tout : ils doivent recouvrir la
+          navigation, y compris les écrans à pied de page collant. */}
+      <FournisseurToasts>
+        <FournisseurAuth>
+          <StatusBar style="light" />
+          <Navigation />
+        </FournisseurAuth>
+      </FournisseurToasts>
     </SafeAreaProvider>
   );
 }

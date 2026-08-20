@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { View, Text } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { Ecran, Carte, CarteSquelette, Vide } from "../composants/Base";
+import { Ecran, Carte, CarteSquelette, Vide, Alerte } from "../composants/Base";
 import { api } from "../api/client";
 import { surNotification } from "../api/socket";
 import { useNotifications } from "../contexte/Notifications";
@@ -28,7 +28,7 @@ function quand(date) {
 
 export default function Notifications() {
   const [liste, setListe] = useState(null);
-  const { rafraichir } = useNotifications();
+  const { rafraichir, enLigne } = useNotifications();
 
   const charger = useCallback(async () => {
     const r = await api("/api/notifications");
@@ -45,6 +45,15 @@ export default function Notifications() {
 
   return (
     <Ecran titre="Notifications" onRafraichir={charger}>
+      {/* Sans cet avertissement, une liste vide pendant une coupure réseau se
+          lit comme « il ne s'est rien passé » — ce qui est faux. */}
+      {!enLigne ? (
+        <Alerte type="attention">
+          Temps réel indisponible : les nouvelles notifications peuvent tarder à
+          apparaître. Tirez la liste vers le bas pour la rafraîchir.
+        </Alerte>
+      ) : null}
+
       {liste === null ? (
         <>
           <CarteSquelette lignes={2} />

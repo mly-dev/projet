@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { query, tx, getParametre } = require("./db");
+const { fcfa } = require("./format");
 const { notifier, emettreAdmins } = require("./notifications");
 const { auditer } = require("./audit");
 
@@ -70,7 +71,7 @@ async function initierVersement(clientUser, achatId, montant, operateur) {
   if (!OPERATEURS.includes(operateur)) throw new Error("Opérateur inconnu.");
   const minimum = Number(await getParametre("versement_minimum", 100));
   if (!Number.isInteger(montant) || montant < minimum) {
-    throw new Error(`Le versement minimum est de ${minimum} F.`);
+    throw new Error(`Le versement minimum est de ${fcfa(minimum)}.`);
   }
   const numeros = await getParametre("numeros_depot", {});
   if (!numeros[operateur]) throw new Error("Numéro de dépôt indisponible pour cet opérateur.");
@@ -147,7 +148,7 @@ async function validerVersement(adminUser, versementId, montantReel) {
 
     const v = await transitionner(client, versementId, "valide", adminUser.id,
       montant !== avant.rows[0].montant_declare
-        ? `Validé pour le montant réellement reçu : ${montant} F (déclaré : ${avant.rows[0].montant_declare} F)`
+        ? `Validé pour le montant réellement reçu : ${fcfa(montant)} (déclaré : ${fcfa(avant.rows[0].montant_declare)})`
         : "Validé",
       { montant_valide: montant, valide_par: adminUser.id });
 
@@ -177,7 +178,7 @@ async function validerVersement(adminUser, versementId, montantReel) {
     versement.client_id,
     "versement_valide",
     "Versement validé ✓",
-    `Votre versement de ${montant} F sur « ${achat.produit_nom} » est validé. Total versé : ${total} F sur ${achat.prix_total} F.`,
+    `Votre versement de ${fcfa(montant)} sur « ${achat.produit_nom} » est validé. Total versé : ${fcfa(total)} sur ${fcfa(achat.prix_total)}.`,
     { achat_id: achat.id, versement_id: versementId, montant, total }
   );
   if (complete) {

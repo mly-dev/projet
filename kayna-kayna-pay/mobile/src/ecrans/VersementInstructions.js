@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert } from "react-native";
+import { View, Text } from "react-native";
 import { Ecran, Carte, Bouton, CarteSquelette, Etape, Alerte, Badge } from "../composants/Base";
+import { useToast } from "../composants/Toasts";
 import { api } from "../api/client";
 import { couleurs, texte, espace, rayon, fcfa, ETATS_VERSEMENT } from "../theme";
 
@@ -11,6 +12,7 @@ import { couleurs, texte, espace, rayon, fcfa, ETATS_VERSEMENT } from "../theme"
 // engage de l'argent réel. La référence est donc affichée en très grand,
 // chiffre par chiffre, pour qu'elle soit recopiable sans erreur au guichet.
 export default function VersementInstructions({ route, navigation }) {
+  const toast = useToast();
   const { versementId, achatId } = route.params;
   const [instructions, setInstructions] = useState(route.params.instructions || null);
   const [versement, setVersement] = useState(null);
@@ -40,7 +42,7 @@ export default function VersementInstructions({ route, navigation }) {
     setEnCours(true);
     const r = await api(`/api/versements/${versementId}/confirmer`, { method: "POST" });
     setEnCours(false);
-    if (!r.ok) return Alert.alert("Impossible", r.erreur);
+    if (!r.ok) return toast("erreur", "Déclaration impossible", r.erreur);
     navigation.replace("VersementAttente", { versementId, achatId });
   }
 

@@ -4,6 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import {
   Ecran, Carte, CarteSquelette, Anneau, Badge, Bouton, Lien, Alerte, Section, Ligne,
 } from "../composants/Base";
+import { useToast } from "../composants/Toasts";
 import { api } from "../api/client";
 import { surNotification } from "../api/socket";
 import { couleurs, texte, espace, rayon, fcfa, ETATS_VERSEMENT, ETATS_ACHAT } from "../theme";
@@ -13,6 +14,7 @@ import { couleurs, texte, espace, rayon, fcfa, ETATS_VERSEMENT, ETATS_ACHAT } fr
 const VERSEMENT_OUVERT = ["initie", "en_attente"];
 
 export default function DetailAchat({ route, navigation }) {
+  const toast = useToast();
   const [achat, setAchat] = useState(null);
 
   const charger = useCallback(async () => {
@@ -56,7 +58,8 @@ export default function DetailAchat({ route, navigation }) {
           style: "destructive",
           onPress: async () => {
             const r = await api(`/api/achats/${achat.id}/annulation`, { method: "POST", corps: {} });
-            if (!r.ok) return Alert.alert("Impossible", r.erreur);
+            if (!r.ok) return toast("erreur", "Demande impossible", r.erreur);
+            toast("info", "Demande enregistrée", "Notre équipe traitera votre demande d'annulation.");
             charger();
           },
         },

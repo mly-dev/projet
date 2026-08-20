@@ -1,6 +1,7 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { surNotification } from "../api/socket";
 import {
   Ecran, Carte, CarteSquelette, Progression, Champ, Section, Vide, Bouton,
 } from "../composants/Base";
@@ -46,6 +47,11 @@ export default function Accueil({ navigation }) {
   }, []);
 
   useFocusEffect(useCallback(() => { charger(); }, [charger]));
+
+  // Une validation qui arrive pendant qu'on regarde l'accueil doit faire bouger
+  // les montants affichés, pas seulement le bandeau : autrement le client lit
+  // « versement validé » au-dessus d'une barre restée à zéro.
+  useEffect(() => surNotification(() => charger()), [charger]);
 
   function lancerRecherche() {
     if (!recherche.trim()) return;

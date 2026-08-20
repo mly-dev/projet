@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert } from "react-native";
+import { View, Text } from "react-native";
 import {
   Ecran, Carte, CarteSquelette, Champ, Bouton, Badge, Puces, Ligne, Alerte,
 } from "../composants/Base";
+import { useToast } from "../composants/Toasts";
 import { api } from "../api/client";
 import { couleurs, texte, espace, rayon, fcfa, rythmeIndicatif } from "../theme";
 
@@ -27,6 +28,7 @@ function enClair(jours) {
 }
 
 export default function FicheProduit({ route, navigation }) {
+  const toast = useToast();
   const [produit, setProduit] = useState(null);
   const [parJour, setParJour] = useState(null);
   const [enCours, setEnCours] = useState(false);
@@ -63,11 +65,15 @@ export default function FicheProduit({ route, navigation }) {
     setEnCours(true);
     const r = await api("/api/achats", { method: "POST", corps: { produit_id: produit.id } });
     setEnCours(false);
-    if (!r.ok) return Alert.alert("Impossible de démarrer", r.erreur);
-    Alert.alert(
-      "C'est parti ! 🎉",
+    if (!r.ok) return toast("erreur", "Impossible de démarrer", r.erreur);
+    // On emmène directement le client sur son achat : lui demander de confirmer
+    // par « Voir mon achat » ajoutait un appui pour rien.
+    navigation.replace("DetailAchat", { id: r.achat.id });
+    toast(
+      "succes",
+      "C'est parti !",
       `Votre portefeuille pour « ${produit.nom} » est ouvert. Versez à votre rythme, même 100 F.`,
-      [{ text: "Voir mon achat", onPress: () => navigation.replace("DetailAchat", { id: r.achat.id }) }]
+      { icone: "🎉" }
     );
   }
 

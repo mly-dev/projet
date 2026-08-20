@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Alert } from "react-native";
 import { Ecran, Champ, Bouton, Lien, Alerte } from "../composants/Base";
+import { useToast } from "../composants/Toasts";
 import { api } from "../api/client";
 import { useAuth } from "../contexte/Auth";
 import { espace } from "../theme";
 
 export default function Connexion({ navigation }) {
+  const toast = useToast();
   const { ouvrirSession } = useAuth();
   const [telephone, setTelephone] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -22,9 +23,10 @@ export default function Connexion({ navigation }) {
     setEnCours(false);
     if (!r.ok) return setErreur(r.erreur);
     if (r.utilisateur.role !== "client") {
-      return Alert.alert(
-        "Espace réservé",
-        "Cette application est destinée aux clients. Administrateurs et partenaires : utilisez l'espace web."
+      return toast(
+        "attention",
+        "Espace réservé aux clients",
+        "Administrateurs et partenaires : utilisez l'espace web depuis un navigateur."
       );
     }
     await ouvrirSession(r.jeton, r.utilisateur);

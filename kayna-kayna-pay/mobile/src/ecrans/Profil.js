@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { View, Text, Pressable, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ecran, Carte, Champ, Bouton, Lien, Section, Alerte } from "../composants/Base";
+import { useToast } from "../composants/Toasts";
 import { api } from "../api/client";
 import { useAuth } from "../contexte/Auth";
 import { couleurs, texte, espace, rayon, fcfa } from "../theme";
@@ -24,6 +25,7 @@ function initiales(nom) {
 }
 
 export default function Profil({ navigation }) {
+  const toast = useToast();
   const { utilisateur, fermerSession, supprimerCompte } = useAuth();
   const [ancien, setAncien] = useState("");
   const [nouveau, setNouveau] = useState("");
@@ -73,7 +75,7 @@ export default function Profil({ navigation }) {
           style: "destructive",
           onPress: async () => {
             const r = await supprimerCompte();
-            if (!r.ok) Alert.alert("Impossible", r.erreur);
+            if (!r.ok) toast("erreur", "Suppression impossible", r.erreur);
           },
         },
       ]
