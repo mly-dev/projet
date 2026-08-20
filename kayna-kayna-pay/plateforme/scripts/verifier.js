@@ -136,7 +136,38 @@ async function principal() {
     ko("Impossible de lire le catalogue", ["Lancez :  npm run db:migrer && npm run db:seed"]);
   }
 
-  // ── 7. Secret de production ────────────────────────────────────────────────
+  // ── 7. Code source réellement versionné ────────────────────────────────────
+  //
+  // Une règle de .gitignore trop large peut exclure du dépôt un fichier de
+  // code : il fonctionne alors chez celui qui l'a écrit, et manque partout
+  // ailleurs. C'est arrivé à pages/api/medias/, exclu par une règle
+  // « medias/ » destinée aux photos envoyées — le catalogue renvoyait 404 sur
+  // chaque image, sans que rien ne l'explique.
+  try {
+    const { execSync } = require("child_process");
+    const ignores = execSync(
+      'git ls-files --others --ignored --exclude-standard -- pages lib composants client scripts styles db',
+      { cwd: process.cwd(), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+    )
+      .split("\n")
+      .filter((f) => f && !f.includes("node_modules/"));
+
+    if (ignores.length === 0) {
+      ok("Tout le code source est versionné");
+    } else {
+      ko(`${ignores.length} fichier(s) de code exclus du dépôt par .gitignore`, [
+        ...ignores.slice(0, 5).map((f) => `  ${f}`),
+        ignores.length > 5 ? `  … et ${ignores.length - 5} autre(s)` : null,
+        "Ces fichiers manqueront sur toute autre machine.",
+        "Corrigez la règle en cause dans .gitignore — une règle sans barre",
+        "oblique initiale vise tous les dossiers de ce nom, à toute profondeur.",
+      ].filter(Boolean));
+    }
+  } catch (e) {
+    // Hors dépôt git, ou git absent : ce contrôle ne s'applique pas.
+  }
+
+  // ── 8. Secret de production ────────────────────────────────────────────────
   if (process.env.NODE_ENV === "production" &&
       (!process.env.JWT_SECRET || /changez-moi/.test(process.env.JWT_SECRET))) {
     ko("JWT_SECRET non personnalisé alors que NODE_ENV=production", [
