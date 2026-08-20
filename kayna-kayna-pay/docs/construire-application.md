@@ -331,6 +331,88 @@ encadré :
 Envoyez-le-lui par WhatsApp. Il est valable **dix minutes** et ne sert qu'une
 fois. Restez donc devant l'écran pendant leurs inscriptions.
 
+### Vérifiez vous-même avant d'envoyer l'adresse
+
+Une adresse affichée au démarrage ne prouve rien : le tunnel peut tomber une
+minute plus tard, et vos amis n'auront rien d'autre à vous dire que « ça ne
+marche pas ». Faites donc le tour vous-même, **dans cet ordre** :
+
+1. Ouvrez l'adresse du tunnel dans votre propre navigateur. Le catalogue
+   s'affiche ? Le chemin complet fonctionne.
+2. Reprenez-la sur **votre téléphone, Wi-Fi coupé**, en données mobiles. Vous
+   sortez alors par Internet, exactement comme vos amis.
+
+Si les deux passent, l'adresse est bonne. Sinon, la page d'erreur vous dit
+laquelle des trois pièces manque :
+
+| Ce que vous voyez | Ce qui ne va pas | Le geste |
+|---|---|---|
+| **Error 1033** / *Tunnel not found* | Le tunnel n'est plus enregistré | Relancer `cloudflared` — **et redonner la nouvelle adresse** |
+| **502 Bad Gateway** | Le tunnel tient, mais rien n'écoute sur le port 3000 | Redémarrer `npm run dev` |
+| Rien, la page tourne sans fin | L'ordinateur est éteint, en veille, ou sans réseau | Réveiller le PC, vérifier le Wi-Fi |
+
+L'application dit la même chose : **« Tester cette adresse »** distingue
+désormais ces trois pannes au lieu du seul mot « injoignable ». C'est ce
+message qu'il faut vous faire lire par un ami en difficulté.
+
+### Lire le journal du tunnel
+
+La fenêtre `cloudflared` raconte tout, à condition de savoir ce qu'on y
+cherche. Une seule ligne compte vraiment :
+
+```
+INF Registered tunnel connection connIndex=0 ... location=dur01
+```
+
+**Tant que cette ligne n'est pas revenue après une coupure, le tunnel est mort**
+et personne ne joint votre plateforme — même si la fenêtre continue de défiler.
+
+```
+ERR Serve tunnel error error="datagram manager encountered a failure while serving"
+INF Retrying connection in up to 1s        ← il repart : normal, sans gravité
+...
+INF Registered tunnel connection ...       ← rétabli
+```
+
+```
+ERR Serve tunnel error error="control stream encountered a failure while serving"
+INF Retrying connection in up to 1m4s      ← délai monté au maximum
+...                                         et jamais de « Registered » ensuite
+```
+
+Le second cas est une panne installée : le délai entre deux tentatives a grimpé
+jusqu'à son plafond d'une minute, et l'enregistrement n'aboutit plus. Il faut
+intervenir, l'attente ne suffira pas.
+
+Deux messages nomment leur cause directement :
+
+- *« Une opération a été tentée sur un réseau impossible à atteindre »* — le PC
+  a perdu le réseau : Wi-Fi coupé, ou mise en veille ;
+- *« lookup ... i/o timeout »* — le DNS ne répond plus, même symptôme.
+
+### Quand le tunnel retombe sans arrêt
+
+Le tunnel passe par défaut en **QUIC**, c'est-à-dire en UDP. Beaucoup de box et
+d'opérateurs traitent mal l'UDP maintenu longtemps ouvert : la connexion tient
+quelques minutes, puis lâche, se rétablit, lâche encore. Forcez alors le
+transport classique :
+
+```
+cloudflared tunnel --url http://localhost:3000 --protocol http2
+```
+
+C'est du TCP, ordinaire et bien mieux toléré. Un peu moins rapide, nettement
+plus stable sur une connexion irrégulière.
+
+Et **empêchez la mise en veille** pendant les essais : Paramètres → Système →
+Alimentation → *Écran et veille* → **Jamais** sur secteur. Un PC endormi coupe
+le tunnel et la plateforme d'un seul coup, sans rien écrire d'explicite.
+
+> **Rappel qui explique la moitié des échecs** : chaque redémarrage de
+> `cloudflared` tire une **nouvelle adresse**. L'ancienne ne mène plus nulle
+> part. Il faut la renvoyer à vos amis à chaque fois — c'est l'affaire de dix
+> secondes dans l'application, mais personne ne le devine.
+
 ### Ce qu'il faut savoir avant d'ouvrir le tunnel
 
 > **Un tunnel expose votre machine à Internet entier**, tant qu'il tourne.

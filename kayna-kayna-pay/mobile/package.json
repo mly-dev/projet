@@ -8,7 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "aligner": "expo install --fix",
-    "verifier:eas": "node scripts/verifier-eas.js"
+    "verifier:eas": "node scripts/verifier-eas.js",
+    "verifier:adresse": "node scripts/verifier-adresse.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

@@ -65,6 +65,30 @@ export async function reinitialiserAdresse() {
   return adresse;
 }
 
+// Une panne d'adresse a plusieurs causes, et elles n'appellent pas le même
+// geste. Distinguer « le tunnel est mort » de « la plateforme est éteinte » de
+// « mauvaise adresse » évite à celui qui essaie de tout reprendre au hasard.
+//
+// Les codes viennent de l'usage réel d'un tunnel Cloudflare :
+//   530  le tunnel n'est plus enregistré (erreur Cloudflare 1033)
+//   502  le tunnel répond, mais rien n'écoute derrière, sur le port 3000
+function diagnostic(statut, adresse) {
+  const parTunnel = /trycloudflare\.com|\.ngrok(-free)?\.(io|app|dev)/i.test(adresse);
+  if (statut === 530 || statut === 1033) {
+    return parTunnel
+      ? "Le tunnel n'est plus actif. Demandez la nouvelle adresse : elle change à chaque redémarrage."
+      : "Le serveur n'est plus joignable à cette adresse.";
+  }
+  if (statut === 502 || statut === 503 || statut === 504) {
+    return parTunnel
+      ? "Le tunnel fonctionne, mais la plateforme n'est pas démarrée sur l'ordinateur."
+      : "Le serveur ne répond pas encore. Attendez qu'il ait fini de démarrer.";
+  }
+  if (statut === 404) return "Ce n'est pas une plateforme Kayna Kayna Pay.";
+  if (statut === 403 || statut === 401) return "Cette adresse refuse la connexion.";
+  return `Le serveur a répondu ${statut}.`;
+}
+
 // Vérifie qu'une adresse répond bien, avant de l'enregistrer : mieux vaut le
 // dire tout de suite que laisser le client découvrir la panne à la connexion.
 export async function testerAdresse(valeur, delaiMs = 6000) {
@@ -75,20 +99,31 @@ export async function testerAdresse(valeur, delaiMs = 6000) {
   const minuterie = setTimeout(() => abandon.abort(), delaiMs);
   try {
     const res = await fetch(propre + "/api/categories", { signal: abandon.signal });
-    if (!res.ok) return { ok: false, erreur: `Le serveur a répondu ${res.status}.` };
-    const corps = await res.json();
+    if (!res.ok) return { ok: false, erreur: diagnostic(res.status, propre) };
+
+    // Une page d'erreur de tunnel arrive parfois en 200 avec du HTML. Sans ce
+    // contrôle, l'échec de lecture était rejeté plus bas en « injoignable »,
+    // ce qui désigne la mauvaise cause.
+    let corps;
+    try {
+      corps = await res.json();
+    } catch (e) {
+      return { ok: false, erreur: "Cette adresse répond, mais ce n'est pas la plateforme." };
+    }
     if (!corps || !Array.isArray(corps.categories)) {
       return { ok: false, erreur: "Ce n'est pas une plateforme Kayna Kayna Pay." };
     }
     return { ok: true, categories: corps.categories.length };
   } catch (e) {
-    return {
-      ok: false,
-      erreur:
-        e.name === "AbortError"
-          ? "Aucune réponse. Vérifiez que le téléphone et l'ordinateur sont sur le même Wi-Fi."
-          : "Serveur injoignable à cette adresse.",
-    };
+    if (e.name === "AbortError") {
+      return {
+        ok: false,
+        erreur: /^https:/i.test(propre)
+          ? "Aucune réponse. L'ordinateur qui héberge la plateforme est peut-être éteint ou en veille."
+          : "Aucune réponse. Vérifiez que le téléphone et l'ordinateur sont sur le même Wi-Fi.",
+      };
+    }
+    return { ok: false, erreur: "Serveur injoignable à cette adresse." };
   } finally {
     clearTimeout(minuterie);
   }
