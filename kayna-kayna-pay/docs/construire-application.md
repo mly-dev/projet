@@ -270,6 +270,85 @@ Si la connexion échoue, l'ordre de contrôle :
 
 ---
 
+## Faire essayer l'application à d'autres personnes
+
+L'APK s'installe sans difficulté chez n'importe qui. Mais il cherche votre
+serveur à l'adresse inscrite à la construction — `192.168.1.231` par exemple —
+et cette adresse n'existe que sur **votre** réseau. Chez vos amis, elle ne mène
+nulle part.
+
+Deux solutions, selon qu'ils sont chez vous ou non.
+
+### Ils sont chez vous
+
+Rien à faire : même Wi-Fi, l'adresse fonctionne. Plateforme allumée, et c'est
+tout.
+
+### Ils sont ailleurs — un tunnel
+
+Un tunnel donne une adresse publique en `https://` qui aboutit à votre
+ordinateur. Cloudflare en propose un gratuitement, sans compte.
+
+**Une fois**, installez l'outil :
+
+```
+winget install --id Cloudflare.cloudflared
+```
+
+**À chaque session de test**, dans une troisième fenêtre — la plateforme doit
+déjà tourner :
+
+```
+cloudflared tunnel --url http://localhost:3000
+```
+
+Il affiche une adresse de ce genre :
+
+```
+https://neuf-mots-au-hasard.trycloudflare.com
+```
+
+Transmettez-la à vos amis. Dans l'application, écran d'accueil →
+**« Configurer l'adresse du serveur »** → collez l'adresse → **« Tester cette
+adresse »** → *Plateforme jointe* → **Enregistrer**.
+
+> L'adresse **change à chaque redémarrage** du tunnel. C'est sans gravité :
+> vos amis la corrigent dans l'application, il n'y a jamais d'APK à
+> reconstruire.
+
+### Les codes SMS
+
+Personne ne reçoit de vrai SMS : la passerelle n'est pas contractualisée. À
+l'inscription d'un ami, le code s'affiche **dans votre fenêtre de plateforme**,
+encadré :
+
+```
+  ┌──────────────────────────────────────────────────────────┐
+  │                   CODE :  6 7 3 6 6 6                    │
+  └──────────────────────────────────────────────────────────┘
+```
+
+Envoyez-le-lui par WhatsApp. Il est valable **dix minutes** et ne sert qu'une
+fois. Restez donc devant l'écran pendant leurs inscriptions.
+
+### Ce qu'il faut savoir avant d'ouvrir le tunnel
+
+> **Un tunnel expose votre machine à Internet entier**, tant qu'il tourne.
+> L'adresse est tirée au hasard et donc difficile à deviner, mais les comptes
+> de démonstration ont des mots de passe faibles (`admin123`) et l'espace
+> d'administration est joignable par la même adresse.
+>
+> - **Fermez le tunnel** (`Ctrl+C`) dès la fin du test ;
+> - ne le laissez pas tourner sans surveillance, la nuit notamment ;
+> - changez les mots de passe de démonstration si vous ouvrez au-delà de
+>   quelques proches.
+
+Ce dispositif convient à une démonstration entre amis. Pour un vrai pilote avec
+des clients, il faut déployer la plateforme sur un serveur, avec un nom de
+domaine et un certificat — voir *L'essentiel*, partie 6.
+
+---
+
 ## Publier sur le Play Store
 
 Hors du champ de ce guide, mais l'ordre est le suivant :

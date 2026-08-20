@@ -40,8 +40,11 @@ export function normaliserAdresse(saisie) {
   // Sans port explicite en http, la plateforme écoute sur 3000.
   if (/^http:\/\/[^/:]+$/i.test(v)) v = v + ":3000";
   try {
-    // eslint-disable-next-line no-new
-    new URL(v);
+    const u = new URL(v);
+    // `new URL` est très permissif : « pas une adresse !! » lui convient. On
+    // exige donc un nom d'hôte plausible, sans quoi l'écran répondrait
+    // « injoignable » là où « adresse invalide » est la vraie réponse.
+    if (!/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i.test(u.hostname)) return null;
   } catch (e) {
     return null;
   }
