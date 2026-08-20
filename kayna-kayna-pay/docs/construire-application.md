@@ -150,8 +150,14 @@ eas build --platform android --profile essai
 répondez oui, il la garde pour vous. Toutes les mises à jour futures devront
 être signées avec la même clé.
 
-Un lien s'affiche, puis un lien de téléchargement à la fin. Ouvrez-le
-depuis le téléphone, ou transférez le fichier.
+Un lien s'affiche, puis un lien de téléchargement à la fin, avec un QR code.
+
+> **À la question « Install and run the Android build on an emulator? »,
+> répondez NON** si vous voulez essayer sur un vrai téléphone. Cette étape
+> installe l'APK dans un émulateur Android — inutile ici, et elle échoue
+> souvent sur `INSTALL_FAILED_INSUFFICIENT_STORAGE` : c'est le disque virtuel
+> de l'émulateur qui est plein, pas un problème de l'application. La
+> construction, elle, est déjà terminée et l'APK téléchargeable.
 
 ### 5. Installer sur le téléphone
 
