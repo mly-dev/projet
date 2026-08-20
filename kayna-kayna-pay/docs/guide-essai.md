@@ -22,8 +22,9 @@ variante Linux/macOS quand elle diffère.
 6. [Trouver l'adresse de votre ordinateur](#6-trouver-ladresse-de-votre-ordinateur)
 7. [Lancer l'application mobile](#7-lancer-lapplication-mobile)
 8. [Le scénario d'essai](#8-le-scénario-dessai)
-9. [Problèmes courants](#9-problèmes-courants)
-10. [Ce qui ne marchera pas encore](#10-ce-qui-ne-marchera-pas-encore)
+9. [Mettre à jour le projet](#9-mettre-à-jour-le-projet)
+10. [Problèmes courants](#10-problèmes-courants)
+11. [Ce qui ne marchera pas encore](#11-ce-qui-ne-marchera-pas-encore)
 
 ---
 
@@ -472,6 +473,33 @@ portefeuille est crédité de 2 500 F.
 C'est le cœur du produit : le client sait en quelques secondes que son argent
 est bien arrivé.
 
+### E bis. La même chose, mais ailleurs dans l'application
+
+L'essai précédent se fait sur la page d'attente, qui guette le résultat. Le vrai
+test est de vérifier que la notification arrive **où que soit le client**.
+
+1. Déclarez un nouveau versement (`1000` F), jusqu'à « J'ai effectué le dépôt ».
+2. Sur le téléphone, **quittez la page d'attente** : revenez à l'accueil.
+3. Sur le navigateur, validez le versement.
+4. Reposez les yeux sur le téléphone, **sans y toucher**.
+
+✅ Attendu, en même temps :
+
+- un **bandeau blanc** descend en haut de l'écran : « Versement validé ✓ », avec
+  le montant et le total ;
+- les chiffres de l'accueil **bougent tout seuls** : « déjà versés » augmente, la
+  barre de progression avance ;
+- la **pastille rouge** de l'onglet Notifications s'incrémente.
+
+Appuyez sur le bandeau : il ouvre l'achat concerné. Il disparaît seul au bout de
+quelques secondes, ou à l'appui sur ✕.
+
+> **Rien n'apparaît ?** Regardez la fenêtre d'Expo. Une ligne
+> `[socket] connexion impossible vers…` signale que le téléphone ne joint pas le
+> serveur : c'est l'adresse dans `mobile\.env` qu'il faut corriger (section 6).
+> Vérifiez aussi que la mise à jour a bien été téléchargée (section 9) — sur
+> l'ancien code, aucun bandeau n'existe.
+
 ### F. Aller au bout (facultatif)
 
 Refaites un versement du **montant restant** (visible sur le détail de l'achat).
@@ -490,7 +518,73 @@ un **récapitulatif valant preuve d'achat** devient disponible.
 
 ---
 
-## 9. Problèmes courants
+## 9. Mettre à jour le projet
+
+Quand une nouvelle version est publiée, une seule commande depuis le dossier
+`kayna-kayna-pay` :
+
+```
+maj.cmd
+```
+
+Vous pouvez aussi double-cliquer le fichier `maj.cmd` dans l'explorateur.
+Sur macOS ou Linux : `./maj.sh`.
+
+Puis relancez les deux fenêtres — avec `-c` côté mobile, pour vider le cache :
+
+```
+cd kayna-kayna-pay\plateforme
+npm run dev
+```
+
+```
+cd kayna-kayna-pay\mobile
+npx expo start -c
+```
+
+### Pourquoi ne pas faire simplement `git pull` ?
+
+Parce qu'il échoue, avec ce message :
+
+```
+error: Your local changes to the following files would be overwritten by merge:
+        kayna-kayna-pay/mobile/package-lock.json
+Aborting
+```
+
+`package-lock.json` est un fichier que npm réécrit à chaque `npm install`, et
+son contenu exact dépend de la version de npm installée sur votre machine. Dès
+qu'il diffère de celui du dépôt, git refuse de télécharger quoi que ce soit
+pour ne pas écraser ce qu'il prend pour votre travail.
+
+**Le piège est silencieux** : `git pull` s'arrête, mais si vous relancez le
+serveur sans lire le message, tout démarre normalement — sur l'ancien code. On
+croit avoir mis à jour, et rien n'a changé.
+
+`maj.cmd` remet ces fichiers en l'état avant de récupérer le code. Ils sont
+entièrement générés par la machine : aucun travail n'est perdu.
+
+Manuellement, cela revient à :
+
+```
+git checkout -- kayna-kayna-pay/mobile/package-lock.json
+git pull origin claude/kayna-kayna-pay-presentation-gp4lgf
+```
+
+### Vérifier que la mise à jour a bien pris
+
+Après un `git pull` réussi, la dernière ligne doit ressembler à :
+
+```
+Updating 3d47784..bb2eaed
+Fast-forward
+```
+
+Si vous lisez `Aborting`, rien n'a été téléchargé.
+
+---
+
+## 10. Problèmes courants
 
 ### La commande de diagnostic
 
@@ -508,6 +602,8 @@ les données — et donne la commande qui répare chaque point manquant.
 | Message / symptôme | Cause | Solution |
 |---|---|---|
 | `fatal: repository '\' does not exist` | Commande coupée en deux lignes | Retapez-la **sur une seule ligne** |
+| `Your local changes ... would be overwritten` puis `Aborting` | `package-lock.json` réécrit par npm — **rien n'a été téléchargé** | Lancez `maj.cmd` (section 9) |
+| Une correction annoncée ne change rien | Le `git pull` avait échoué sans qu'on le voie | Vérifiez la sortie du pull : `Fast-forward` et non `Aborting` |
 | `'cp' n'est pas reconnu` | `cp` n'existe pas dans `cmd` | Utilisez `copy` |
 | `'psql' n'est pas reconnu` | PostgreSQL absent du PATH | `set PATH=%PATH%;C:\Program Files\PostgreSQL\17\bin` |
 | `'node' / 'npm' n'est pas reconnu` | Fenêtre ouverte avant l'installation | Fermez et rouvrez `cmd` |
@@ -542,7 +638,7 @@ npm run db:migrer && npm run db:seed
 
 ---
 
-## 10. Ce qui ne marchera pas encore
+## 11. Ce qui ne marchera pas encore
 
 Volontairement absent à ce stade — pour éviter les fausses alertes :
 

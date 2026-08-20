@@ -109,6 +109,26 @@ npm install && npx expo start
 > Sans PostgreSQL démarré et sans la base créée, `db:migrer` s'arrête — il vous
 > dira quoi faire.
 
+## Mettre à jour le projet
+
+```
+maj.cmd                 (Windows — ou double-cliquez le fichier)
+./maj.sh                (macOS, Linux)
+```
+
+Puis relancez les deux fenêtres, avec `npx expo start -c` côté mobile pour
+vider le cache.
+
+> **Pourquoi un script et pas un simple `git pull` ?** npm réécrit les fichiers
+> `package-lock.json` à chaque `npm install`, et le résultat dépend de la
+> version de npm installée. Git refuse alors de télécharger les nouveautés,
+> avec le message *« Your local changes would be overwritten by merge »*. Le
+> script remet ces fichiers en l'état avant de récupérer le code — ils sont
+> entièrement générés par la machine, aucun travail n'est perdu.
+>
+> Manuellement, cela revient à :
+> `git checkout -- kayna-kayna-pay/mobile/package-lock.json` puis `git pull origin <branche>`.
+
 **➜ Première fois ? Suivez [`docs/guide-essai.md`](docs/guide-essai.md)** : le
 parcours guidé de bout en bout, avec les pièges et les problèmes courants.
 
