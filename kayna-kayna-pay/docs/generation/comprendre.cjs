@@ -161,7 +161,8 @@ const corps = [
       [{ t: "plateforme/lib/db.js", m: true }, "Connexion PostgreSQL, transactions, paramètres de la plateforme."],
       [{ t: "plateforme/pages/api/", m: true }, "Une route = un fichier. Le nom du fichier est l'adresse."],
       [{ t: "plateforme/db/migrations/", m: true }, "Le schéma, en migrations numérotées et empreintées."],
-      [{ t: "plateforme/scripts/smoke.js", m: true }, "Le test de bout en bout : 25 critères d'acceptation."],
+      [{ t: "plateforme/lib/medias.js", m: true }, "Photos de produits : réduction, écriture, service."],
+      [{ t: "plateforme/scripts/smoke.js", m: true }, "Le test de bout en bout : 26 critères d'acceptation."],
       [{ t: "mobile/src/ecrans/", m: true }, "Un écran = un fichier."],
       [{ t: "mobile/src/composants/Base.js", m: true }, "La bibliothèque de composants de l'application."],
       [{ t: "mobile/src/theme.js", m: true }, "Couleurs, tailles, espacements : la source unique du design."],
@@ -388,7 +389,7 @@ const corps = [
   Pm([
     { t: "Une seule commande, " },
     { t: "npm run smoke", m: true, b: true },
-    { t: ", rejoue le parcours complet contre un serveur réel et une base réelle, et vérifie 25 critères." },
+    { t: ", rejoue le parcours complet contre un serveur réel et une base réelle, et vérifie 26 critères. Une seconde, npm run smoke:photos, en vérifie 18 sur les images." },
   ]),
   Espace(80),
   Tab(
@@ -452,6 +453,16 @@ const corps = [
         "« Migration interrompue — » ne dit rien de ce qui manque.",
         "Diagnostiquer le code d'erreur et donner la commande de réparation.",
       ],
+      [
+        { t: "Une règle .gitignore sans barre initiale", b: true },
+        "« medias/ » exclut tout dossier de ce nom, à toute profondeur — y compris la route qui sert les photos. Le code marche chez son auteur et manque partout ailleurs.",
+        "Ancrer la règle : « /medias/ ». npm run verifier signale désormais tout fichier de code exclu du dépôt.",
+      ],
+      [
+        { t: "Un git pull qui échoue en silence", b: true },
+        "Il s'arrête sur « Aborting », mais le serveur relancé ensuite démarre sur l'ancien code. On croit avoir mis à jour.",
+        "maj.cmd remet les fichiers de verrouillage npm en l'état avant de récupérer le code.",
+      ],
     ],
     [2700, 3600, 3060]
   ),
@@ -476,14 +487,14 @@ const corps = [
         "Quelques semaines",
       ],
       [
-        { t: "Gestion autonome du catalogue", b: true },
-        "Les partenaires consultent leurs produits mais ne les modifient pas encore.",
-        "Quelques semaines",
+        { t: "Notifications hors application", b: true },
+        "Le temps réel ne fonctionne que si l'application est ouverte. Application fermée, le client n'apprend rien — lib/push.js n'est qu'un talon.",
+        "Quelques jours",
       ],
       [
-        { t: "Notifications push", b: true },
-        "Aujourd'hui le temps réel ne fonctionne que si l'application est ouverte.",
-        "Quelques jours",
+        { t: "Gestion autonome du catalogue", b: true },
+        "Les partenaires consultent leurs produits et leurs photos, mais ne les modifient pas encore.",
+        "Quelques semaines",
       ],
       [
         { t: "Stockage partagé des limites", b: true },
@@ -518,7 +529,7 @@ const corps = [
     Pm(
       [
         { t: "npm run smoke", m: true, b: true },
-        { t: " : 25 critères d'acceptation rejoués contre un serveur et une base réels." },
+        { t: " : 26 critères d'acceptation rejoués contre un serveur et une base réels, plus 18 sur les photos." },
       ],
       { after: 0 }
     ),

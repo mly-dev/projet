@@ -41,7 +41,7 @@ const corps = [
     ["Morceau", "Rôle", "Analogie"],
     [
       [{ t: "Application mobile", b: true }, "Ce que voit le client — 16 écrans", "La salle du restaurant"],
-      [{ t: "Serveur", b: true }, "Toutes les règles — 37 entrées d'API", "La cuisine"],
+      [{ t: "Serveur", b: true }, "Toutes les règles — 39 entrées d'API", "La cuisine"],
       [{ t: "Base de données", b: true }, "La mémoire — 14 tables", "Le garde-manger"],
     ],
     [2400, 4400, 2560]
@@ -85,12 +85,12 @@ const corps = [
   Tab(
     ["Fait", "Pas encore fait"],
     [
-      ["Application mobile — 16 écrans, design abouti", "Essai sur un vrai téléphone, par vous"],
-      ["Serveur, espace d'administration, espace partenaire", "Photos des produits"],
-      ["25 critères d'acceptation automatiques, tous verts", "Vrais SMS — passerelle à contractualiser"],
-      ["Parcours client vérifié écran par écran", "Conditions générales validées par un juriste"],
-      ["Logo, charte graphique, présentation", "Consultation BCEAO / UEMOA"],
-      ["Double authentification des administrateurs", "Notifications hors application"],
+      ["Application mobile — 16 écrans, design abouti", "Vrais SMS — passerelle à contractualiser"],
+      ["Serveur, espace d'administration, espace partenaire", "Conditions générales validées par un juriste"],
+      ["Photos de produits, réduites pour le forfait mobile", "Consultation BCEAO / UEMOA"],
+      ["Notifications en temps réel des deux côtés", "Notifications quand l'application est fermée"],
+      ["26 critères d'acceptation + 18 sur les photos, tous verts", "Gestion du catalogue par les partenaires"],
+      ["Logo, charte graphique, présentation, trois documents", "Essai sur un vrai téléphone, par vous"],
     ],
     [4680, 4680]
   ),
@@ -175,6 +175,19 @@ const corps = [
   P("Scannez le QR code avec Expo Go. Si le QR affiche 127.0.0.1, forcez l'adresse :", { after: 60 }),
   Cmd("set REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.231"),
 
+  H2("⑤ Mettre à jour, plus tard"),
+  Pm([
+    { t: "Une seule commande depuis le dossier " },
+    { t: "kayna-kayna-pay", m: true },
+    { t: " :" },
+  ], { after: 60 }),
+  Cmd("maj.cmd"),
+  Espace(50),
+  P(
+    "Elle récupère la dernière version sans se laisser bloquer par les fichiers de verrouillage npm, que git refuse sinon d'écraser. Relancez ensuite les deux fenêtres, avec npx expo start -c côté mobile pour vider le cache.",
+    { after: 0 }
+  ),
+
   Espace(200),
   Encadre("astuce", "En cas de blocage", [
     Pm(
@@ -191,7 +204,7 @@ const corps = [
   ]),
 
   // ══════════════════════ 8 ══════════════════════
-  H1("8.  Les comptes de démonstration"),
+  T1("8.  Les comptes de démonstration"),
   Pm([
     { t: "Créés par " },
     { t: "npm run db:seed", m: true },

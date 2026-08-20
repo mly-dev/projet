@@ -174,7 +174,18 @@ const corps = [
   ),
 
   H2("2.7  Notifications, profil et aide"),
-  Puce([{ t: "Notifications", b: true }, { t: " — l'onglet regroupe tout l'historique : versements validés ou rejetés, achats complétés, informations de livraison, rappels d'encouragement." }]),
+  P(
+    "Dès qu'un versement est validé ou rejeté, un bandeau descend en haut de l'écran, quel que soit l'endroit où se trouve le client dans l'application. Il indique le montant et le total atteint, disparaît seul au bout de quelques secondes, et ouvre l'achat concerné si on appuie dessus. Les chiffres affichés se mettent à jour au même instant.",
+    { after: 60 }
+  ),
+  Encadre("attention", "Ce que le client ne reçoit pas encore", [
+    P(
+      "Tout cela suppose l'application ouverte. Application fermée, le client n'apprend rien : les notifications qui atteignent un téléphone en veille demandent une passerelle qui reste à mettre en place. Le client retrouve tout à sa prochaine ouverture — rien n'est perdu, seulement différé.",
+      { after: 0 }
+    ),
+  ]),
+  Espace(140),
+  Puce([{ t: "Notifications", b: true }, { t: " — l'onglet regroupe tout l'historique : versements validés ou rejetés, achats complétés, informations de livraison, rappels d'encouragement. Une pastille rouge sur l'onglet compte ce qui n'a pas été lu." }]),
   Puce([{ t: "Profil", b: true }, { t: " — modifier son mot de passe, consulter les conditions générales, la politique de confidentialité, l'aide et le contact, se déconnecter ou supprimer son compte." }]),
 
   // ══════════════════════ 3. ADMIN ══════════════════════
@@ -184,6 +195,10 @@ const corps = [
   ),
 
   H2("3.1  Se connecter"),
+  P(
+    "Une fois connecté, le temps réel vaut sur toutes les pages : un versement déclaré fait apparaître un bandeau et incrémente le compteur de la « File de validation », que vous soyez sur le catalogue, les achats ou les paramètres. Un voyant en bas de la barre latérale indique si la liaison est active — une file figée par une coupure réseau se lit autrement comme une file vide.",
+    { after: 140 }
+  ),
   P("La connexion se fait en deux temps, parce qu'un compte d'administration donne accès à l'argent des clients."),
   Etape(1, "Saisir son numéro de téléphone et son mot de passe."),
   Etape(2, [
@@ -296,6 +311,30 @@ const corps = [
       { after: 60 }
     ),
     P("Cela évite toute erreur de calcul, et garantit que la règle est appliquée de la même façon partout.", { after: 0 }),
+  ]),
+  Espace(140),
+  H3("Les photos d'un produit"),
+  P(
+    "Chaque ligne du catalogue porte une vignette à gauche. Cliquez dessus — ou sur le bouton « Photos » — pour ouvrir la gestion des images."
+  ),
+  Etape(1, "Glissez une photo dans le cadre, ou cliquez pour la choisir sur l'ordinateur."),
+  Etape(2, [
+    { t: "Elle est " },
+    { t: "réduite automatiquement", b: true },
+    { t: " : n'hésitez pas à envoyer la photo telle qu'elle sort de l'appareil, même très lourde." },
+  ]),
+  Etape(3, "La première photo de la liste est celle qui s'affiche partout. Pour en changer, cliquez « Mettre en tête » sur une autre."),
+  Etape(4, "Cinq photos au maximum par produit. « Retirer » en supprime une définitivement."),
+  Espace(100),
+  Encadre("astuce", "Pourquoi les photos sont réduites", [
+    P(
+      "Vos clients consultent le catalogue sur un forfait payé au mégaoctet, souvent en 3G. Une photo de téléphone pèse plusieurs mégaoctets ; vingt d'entre elles et la consultation coûterait plus cher que le produit. La plateforme en conserve deux versions allégées et jette l'originale.",
+      { after: 60 }
+    ),
+    P(
+      "Les données de localisation contenues dans le fichier sont effacées au passage : une photo prise en boutique porte souvent ses coordonnées GPS.",
+      { after: 0 }
+    ),
   ]),
   Espace(140),
   P(
