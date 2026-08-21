@@ -189,6 +189,35 @@ function expliquer(e) {
     return socle.concat(["  L'adresse du serveur de base est introuvable. Vérifiez DATABASE_URL.", ""]);
   }
 
+  // Les deux faces du chiffrement. Le message d'origine de pg est exact mais
+  // ne dit pas quoi faire, et la réponse n'est pas la même dans les deux sens.
+  if (/does not support SSL/i.test(e.message || "")) {
+    return socle.concat([
+      "  Cette base n'accepte pas les connexions chiffrées, alors qu'une",
+      "  connexion chiffrée a été demandée.",
+      "",
+      "  C'est normal pour une base d'un réseau privé — pile Docker, réseau",
+      "  interne d'un hébergeur. Déclarez-le :",
+      "",
+      "     DATABASE_SSL=off",
+      "",
+      "  Si en revanche cette base est joignable depuis Internet, ne le faites",
+      "  pas : les identifiants circuleraient en clair. Activez plutôt TLS du",
+      "  côté du serveur de base.",
+      "",
+    ]);
+  }
+
+  if (/self.signed certificate|unable to verify the first certificate/i.test(e.message || "")) {
+    return socle.concat([
+      "  La base présente un certificat que l'on ne peut pas vérifier.",
+      "  Certains hébergeurs (Render, Heroku) signent le leur eux-mêmes.",
+      "",
+      "     DATABASE_SSL=no-verify",
+      "",
+    ]);
+  }
+
   return socle.concat([
     "  Détail : " + (e.message || e.code || String(e)),
     "",

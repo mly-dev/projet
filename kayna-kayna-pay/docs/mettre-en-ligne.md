@@ -422,7 +422,8 @@ de 30 jours**.
 | Ce que vous voyez | Cause | Geste |
 |---|---|---|
 | Le déploiement échoue sur `Démarrage refusé` | une variable manque | lisez le journal : il nomme laquelle |
-| `self signed certificate` | la base refuse son certificat | ajoutez `DATABASE_SSL=no-verify` |
+| `self signed certificate` | la base refuse son certificat à la vérification | ajoutez `DATABASE_SSL=no-verify` |
+| `The server does not support SSL connections` | on chiffre vers une base qui n'a pas de TLS — normal sur un réseau privé | ajoutez `DATABASE_SSL=off` (jamais si la base est joignable depuis Internet) |
 | `/api/sante` répond 503 | la base est injoignable | vérifiez que le service PostgreSQL tourne |
 | Les photos disparaissent après un déploiement | pas de volume monté sur `/data` | étape 4.4 |
 | L'application dit « Le tunnel n'est plus actif » | elle vise encore l'ancienne adresse | l'ami a une vieille adresse enregistrée : *Configurer l'adresse du serveur* → **Réinitialiser** |

@@ -30,8 +30,46 @@ const SECRETS_D_EXEMPLE = [
 
 const LONGUEUR_MINIMALE_SECRET = 32;
 
+// Une base est « locale » quand la connexion ne traverse aucun réseau qu'on ne
+// contrôle pas. C'est le seul critère qui vaille pour décider du chiffrement :
+// TLS protège d'une écoute en chemin, et là il n'y a pas de chemin.
+//
+// La première version listait des noms d'hôtes attendus — localhost, postgres,
+// db. Elle s'est trompée sur sa propre pile d'essai, dont le service s'appelle
+// « base », et se serait trompée sur Railway, dont l'adresse interne est
+// « postgres.railway.internal » : la migration s'arrêtait sur « The server does
+// not support SSL connections ». Une liste de noms ne peut pas prévoir le nom
+// que chacun donnera à son service. On raisonne donc sur ce qui est vrai des
+// adresses elles-mêmes.
+const SUFFIXES_PRIVES = [".internal", ".local", ".localdomain", ".flycast"];
+
 function estLocale(url) {
-  return /@(localhost|127\.0\.0\.1|\[::1\]|host\.docker\.internal|postgres|db)[:/]/i.test(url);
+  let hote;
+  try {
+    hote = new URL(url).hostname;
+  } catch (e) {
+    return false;
+  }
+  if (!hote) return false;
+  const h = hote.replace(/^\[|\]$/g, "").toLowerCase();
+
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+
+  // Plages privées (RFC 1918) : le trafic ne quitte pas le réseau local.
+  if (/^10\./.test(h)) return true;
+  if (/^192\.168\./.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
+
+  // Domaines réservés aux réseaux privés, employés par les hébergeurs pour
+  // leur réseau interne — et où le serveur de base n'expose pas de TLS.
+  if (SUFFIXES_PRIVES.some((s) => h.endsWith(s))) return true;
+
+  // Nom d'hôte sans point : un alias de réseau Docker, un nom de conteneur.
+  // Aucun nom pareil n'existe sur Internet, donc la connexion ne sort pas de
+  // la machine. C'est le cas de « base » dans docker-compose.yml.
+  if (!h.includes(".")) return true;
+
+  return false;
 }
 
 // TLS de la base de données.

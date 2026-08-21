@@ -13,7 +13,8 @@
     "smoke": "node scripts/smoke.js",
     "smoke:photos": "node scripts/smoke-photos.js",
     "preparer": "node scripts/preparer.js",
-    "demarrer:production": "node scripts/migrer.js && node server.js"
+    "demarrer:production": "node scripts/migrer.js && node server.js",
+    "verifier:config": "node scripts/verifier-config.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
