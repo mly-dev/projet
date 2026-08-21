@@ -1,7 +1,28 @@
 const { Pool } = require("pg");
+const { sslBase } = require("./config");
+
+const URL = process.env.DATABASE_URL || "postgres://kkp:kkp@localhost:5432/kaynakaynapay";
+const ssl = sslBase(URL);
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgres://kkp:kkp@localhost:5432/kaynakaynapay",
+  connectionString: URL,
+  // `undefined` laisse pg lire le sslmode de l'URL ; toute autre valeur
+  // l'emporte. Voir lib/config.js pour la règle appliquée.
+  ...(ssl === undefined ? {} : { ssl }),
+});
+
+// Un certificat auto-signé est le premier obstacle d'une mise en ligne, et son
+// message d'origine ne dit pas quoi faire. Celui-ci le dit.
+pool.on("error", (e) => {
+  if (/self.signed certificate|unable to verify the first certificate/i.test(e.message)) {
+    console.error(
+      "\n  ✗ La base refuse son certificat à la vérification.\n" +
+        "    Certains hébergeurs (Render, Heroku) signent le leur eux-mêmes.\n" +
+        "    Ajoutez alors la variable :   DATABASE_SSL=no-verify\n"
+    );
+  } else {
+    console.error("Erreur de connexion à la base :", e.message);
+  }
 });
 
 async function query(text, params) {

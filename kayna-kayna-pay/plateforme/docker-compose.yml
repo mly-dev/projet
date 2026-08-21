@@ -1,0 +1,54 @@
+# Répétition générale de la mise en ligne, sur votre propre machine.
+#
+#   docker compose up --build
+#
+# Cette pile monte exactement ce que montera l'hébergeur : la plateforme en mode
+# production, une base PostgreSQL à côté, un volume pour les photos. Rien n'est
+# facturé, rien n'est exposé à Internet, et les pannes de configuration se
+# découvrent ici plutôt qu'en ligne.
+#
+# La première fois, peuplez la base de démonstration :
+#   docker compose exec plateforme node scripts/seed.js
+#
+# Pour tout effacer et recommencer :
+#   docker compose down -v
+
+services:
+  base:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: kkp
+      POSTGRES_PASSWORD: kkp
+      POSTGRES_DB: kaynakaynapay
+    volumes:
+      - donnees:/var/lib/postgresql/data
+    healthcheck:
+      # « depuis_le_début » : sans cette sonde, la plateforme démarrerait avant
+      # que PostgreSQL n'accepte les connexions, et les migrations échoueraient.
+      test: ["CMD-SHELL", "pg_isready -U kkp -d kaynakaynapay"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  plateforme:
+    build: .
+    depends_on:
+      base:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://kkp:kkp@base:5432/kaynakaynapay
+      # Secret d'essai : cette pile n'est pas exposée à Internet. Sur un
+      # hébergeur, il vient de `npm run preparer` et n'est jamais écrit ici.
+      JWT_SECRET: essai-local-uniquement-ne-jamais-utiliser-en-ligne
+      NODE_ENV: production
+      MEDIAS_DIR: /data/medias
+      SMS_FOURNISSEUR: console
+      TRUST_PROXY: "0"
+    ports:
+      - "3000:3000"
+    volumes:
+      - photos:/data/medias
+
+volumes:
+  donnees:
+  photos:

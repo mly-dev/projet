@@ -1,17 +1,76 @@
 // Données de démonstration : paramètres, contenus, catégories, comptes,
 // partenaires et produits d'exemple (prix indicatifs en F CFA).
 require("dotenv").config();
+const crypto = require("crypto");
 const { pool, query, setParametre, getParametre } = require("../lib/db");
 const { hacherMotDePasse } = require("../lib/auth");
+const { PRODUCTION } = require("../lib/config");
+
+// Mots de passe des comptes de démonstration.
+//
+// Sur un poste de développement, des mots de passe courts et connus font gagner
+// du temps à chaque essai. Sur un serveur public, ce sont des comptes — dont un
+// super-administrateur — dont les identifiants sont écrits en clair dans un
+// dépôt Git et dans la documentation. Quiconque trouve l'adresse entre.
+//
+// En production ils sont donc tirés au hasard et affichés une seule fois, à la
+// fin du seed. SEED_MDP_ADMIN et consorts permettent d'en imposer un choisi.
+const comptes = [];
+
+function motDePasse(role, defautDeDemo) {
+  const impose = process.env[`SEED_MDP_${role.toUpperCase()}`];
+  if (impose) return impose;
+  if (!PRODUCTION) return defautDeDemo;
+  return crypto.randomBytes(9).toString("base64url");
+}
+
+// En production, ces mots de passe ne sont affichés qu'ici, une seule fois :
+// seul un condensé est conservé en base, ils ne peuvent pas être relus ensuite.
+function annoncerComptes() {
+  const nouveaux = comptes.filter((c) => c.mdp);
+  const existants = comptes.filter((c) => !c.mdp);
+
+  console.log("\nSeed terminé.\n");
+
+  if (nouveaux.length) {
+    console.log("  Comptes créés :\n");
+    const largeur = Math.max(...nouveaux.map((c) => c.role.length));
+    for (const c of nouveaux) {
+      console.log(`    ${c.role.padEnd(largeur)}  ${c.telephone}  ${c.mdp}   ${c.nom}`);
+    }
+    if (PRODUCTION) {
+      console.log(
+        "\n  ┌────────────────────────────────────────────────────────────────┐\n" +
+          "  │  Notez ces mots de passe MAINTENANT : ils ne sont pas          │\n" +
+          "  │  conservés et cet affichage ne reviendra pas.                  │\n" +
+          "  └────────────────────────────────────────────────────────────────┘"
+      );
+    }
+  }
+
+  if (existants.length) {
+    console.log(`\n  ${existants.length} compte(s) déjà présent(s), mot de passe inchangé :\n`);
+    for (const c of existants) console.log(`    ${c.telephone}  ${c.nom}`);
+  }
+  console.log("");
+}
 
 async function upsertUser(telephone, nom, mdp, role) {
   const existant = await query("SELECT id FROM users WHERE telephone = $1", [telephone]);
-  if (existant.rows.length) return existant.rows[0].id;
+  if (existant.rows.length) {
+    // Un compte déjà présent garde son mot de passe : relancer le seed ne doit
+    // pas écraser un mot de passe changé depuis. On le note pour ne surtout pas
+    // afficher plus bas celui qu'on vient de tirer — il n'a pas été appliqué,
+    // et l'annoncer enfermerait dehors.
+    comptes.push({ role, nom, telephone, mdp: null });
+    return existant.rows[0].id;
+  }
   const r = await query(
     `INSERT INTO users (telephone, nom, mot_de_passe_hash, role, telephone_verifie, cgu_acceptees_le)
      VALUES ($1, $2, $3, $4, TRUE, now()) RETURNING id`,
     [telephone, nom, await hacherMotDePasse(mdp), role]
   );
+  comptes.push({ role, nom, telephone, mdp });
   return r.rows[0].id;
 }
 
@@ -60,10 +119,11 @@ async function principal() {
   const cat = {};
   for (const ligne of (await query("SELECT id, slug FROM categories")).rows) cat[ligne.slug] = ligne.id;
 
-  // Comptes de démonstration (mots de passe à changer hors démo).
-  await upsertUser("+22790000000", "Super Admin", "superadmin123", "superadmin");
-  await upsertUser("+22790000010", "Admin Démo", "admin123", "admin");
-  const clientId = await upsertUser("+22791111111", "Aïcha Démo", "client123", "client");
+  // Comptes de démonstration. Voir motDePasse() : valeurs fixes en
+  // développement, tirées au hasard sur un serveur public.
+  await upsertUser("+22790000000", "Super Admin", motDePasse("superadmin", "superadmin123"), "superadmin");
+  await upsertUser("+22790000010", "Admin Démo", motDePasse("admin", "admin123"), "admin");
+  const clientId = await upsertUser("+22791111111", "Aïcha Démo", motDePasse("client", "client123"), "client");
 
   // Partenaires vérifiés + comptes.
   const partenaires = [
@@ -73,7 +133,7 @@ async function principal() {
   ];
   const pids = {};
   for (const [enseigne, tel, contact] of partenaires) {
-    const uid = await upsertUser(tel, enseigne, "partenaire123", "partenaire");
+    const uid = await upsertUser(tel, enseigne, motDePasse("partenaire", "partenaire123"), "partenaire");
     const existant = await query("SELECT id FROM partenaires WHERE enseigne = $1", [enseigne]);
     if (existant.rows.length) {
       pids[enseigne] = existant.rows[0].id;
@@ -113,12 +173,7 @@ async function principal() {
     );
   }
 
-  console.log("Seed terminé.");
-  console.log("Comptes de démonstration :");
-  console.log("  Super-admin : +22790000000 / superadmin123");
-  console.log("  Admin       : +22790000010 / admin123");
-  console.log("  Client      : +22791111111 / client123");
-  console.log("  Partenaire  : +22792000001 / partenaire123 (Sahel Électronique)");
+  annoncerComptes();
   await pool.end();
 }
 

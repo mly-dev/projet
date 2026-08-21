@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { query } = require("./db");
 
+// Le repli n'existe que pour le développement ; en production, lib/config.js
+// arrête le serveur avant qu'il ne serve la moindre requête avec ce secret-là.
 const SECRET = process.env.JWT_SECRET || "kkp-dev-secret-a-changer";
 const DUREE = process.env.JWT_DUREE || "24h";
 const COOKIE = "kkp_jeton";

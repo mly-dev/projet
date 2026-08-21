@@ -286,6 +286,16 @@ tout.
 
 ### Ils sont ailleurs — un tunnel
 
+> **Ce n'est pas la méthode normale**, et il vaut mieux le savoir avant d'y
+> passer une soirée. Un tunnel demande que trois choses tiennent en même temps
+> — plateforme allumée, tunnel ouvert, PC réveillé — et donne une adresse qui
+> change à chaque redémarrage. Ce que font les développeurs à sa place :
+> déployer la plateforme chez un hébergeur, une fois, et ne plus jamais y
+> penser. Voir **[mettre-en-ligne.md](mettre-en-ligne.md)**.
+>
+> Le tunnel reste utile pour montrer quelque chose pendant dix minutes, sans
+> rien déployer. Au-delà, il coûte plus de temps qu'il n'en fait gagner.
+
 Un tunnel donne une adresse publique en `https://` qui aboutit à votre
 ordinateur. Cloudflare en propose un gratuitement, sans compte.
 

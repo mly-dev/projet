@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "node server.js",
     "verifier": "node scripts/verifier.js",
     "db:migrer": "node scripts/migrer.js",
     "db:seed": "node scripts/seed.js",
     "smoke": "node scripts/smoke.js",
-    "smoke:photos": "node scripts/smoke-photos.js"
+    "smoke:photos": "node scripts/smoke-photos.js",
+    "preparer": "node scripts/preparer.js",
+    "demarrer:production": "node scripts/migrer.js && node server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

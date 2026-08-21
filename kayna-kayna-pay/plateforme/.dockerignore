@@ -1,0 +1,20 @@
+# Ce qui ne doit pas entrer dans l'image.
+#
+# Deux raisons, d'inégale gravité : le poids, et le secret. Un .env copié dans
+# une image y reste lisible par quiconque la télécharge, même si le fichier est
+# écrasé ensuite — chaque couche est conservée.
+
+.env
+.env.*
+!.env.example
+
+node_modules
+.next
+npm-debug.log*
+
+# Les photos déjà envoyées appartiennent au volume, pas à l'image.
+medias
+
+.git
+.gitignore
+*.md

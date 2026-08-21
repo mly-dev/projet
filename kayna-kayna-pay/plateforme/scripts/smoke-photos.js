@@ -9,8 +9,14 @@
 const sharp = require("sharp");
 const { Client } = require("pg");
 
-const BASE = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+// SMOKE_BASE est le nom employé par scripts/smoke.js : une seule variable pour
+// désigner « le serveur à tester ». BASE_URL reste accepté par compatibilité.
+const BASE =
+  process.env.SMOKE_BASE ||
+  process.env.BASE_URL ||
+  `http://localhost:${process.env.PORT || 3000}`;
 require("dotenv").config();
+const { motDePasse } = require("./identifiants");
 const bd = new Client({ connectionString: process.env.DATABASE_URL });
 
 async function api(chemin, o = {}) {
@@ -43,7 +49,7 @@ function critere(nom, ok, detail) {
 
   // Connexion administrateur (mot de passe + code SMS).
   const e1 = await api("/api/auth/connexion", {
-    method: "POST", corps: { telephone: "+22790000010", mot_de_passe: "admin123" },
+    method: "POST", corps: { telephone: "+22790000010", mot_de_passe: motDePasse("admin") },
   });
   const r = await bd.query(
     "SELECT code FROM otp_codes WHERE telephone = $1 AND usage = 'connexion' ORDER BY id DESC LIMIT 1",

@@ -51,6 +51,7 @@ quels. Ils sont produits par les scripts de [`docs/generation/`](docs/generation
 | [`docs/cahier-des-charges.md`](docs/cahier-des-charges.md) | tous | Exigences fonctionnelles et techniques v1.0 — **la référence** |
 | [`docs/guide-essai.md`](docs/guide-essai.md) | **pour commencer** | Tester le parcours complet sur un vrai téléphone avec Expo, pas à pas |
 | [`docs/construire-application.md`](docs/construire-application.md) | **pour installer sans Expo Go** | Produire un APK et l'installer : chemin dans le nuage ou entièrement local |
+| [`docs/mettre-en-ligne.md`](docs/mettre-en-ligne.md) | **pour faire tester par d'autres** | Déployer la plateforme sur un hébergeur : la méthode normale, celle qui n'exige plus que votre PC reste allumé |
 | [`docs/exploitation.md`](docs/exploitation.md) | **équipe d'exploitation** | Procédure de validation des versements, gestion des litiges, sauvegardes, surveillance |
 | [`docs/backend.md`](docs/backend.md) | développeurs | Architecture du serveur, modules, parcours de versement, sécurité, recettes de développement |
 | [`docs/api.md`](docs/api.md) | développeurs | Référence des 39 routes de l'API, temps réel, codes d'erreur |
@@ -80,6 +81,7 @@ Trois entrées possibles selon le besoin : **exploiter le service au quotidien**
 | Essai sur un vrai téléphone | ⬜ **À faire en priorité** — jamais lancée sur un appareil réel |
 | Photos de produits | ✅ Envoi depuis l'admin, réduites pour le forfait mobile — 18/18 (`npm run smoke:photos`) |
 | Application installable (APK) | ✅ Configurée et vérifiée — voir `docs/construire-application.md` |
+| Mise en ligne de la plateforme | ✅ Image Docker, sonde de santé, arrêt propre — voir `docs/mettre-en-ligne.md` |
 | Notifications hors application | ⬜ Passerelle push à mettre en place |
 | Cadre juridique (BCEAO/UEMOA) | ⬜ Consultation à engager avant tout lancement public |
 | CGU et politique de confidentialité | 🔶 Projets de texte intégrés (seed) — à faire valider juridiquement |

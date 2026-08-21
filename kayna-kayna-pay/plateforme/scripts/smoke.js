@@ -4,6 +4,7 @@
 require("dotenv").config();
 const { io } = require("socket.io-client");
 const { query, pool } = require("../lib/db");
+const { motDePasse } = require("./identifiants");
 
 const BASE = process.env.SMOKE_BASE || "http://localhost:3000";
 let reussites = 0;
@@ -93,7 +94,7 @@ async function principal() {
   );
 
   // ── Connexions socket : client (notifications) et admin (file) ────────────
-  const { etape1, etape2, jeton: jetonAdmin } = await connexionAdmin("+22790000010", "admin123");
+  const { etape1, etape2, jeton: jetonAdmin } = await connexionAdmin("+22790000010", motDePasse("admin"));
   critere(
     "La connexion administrateur exige un deuxième facteur (aucun jeton au mot de passe seul)",
     etape1.corps.second_facteur === true && !etape1.corps.jeton && Boolean(etape1.corps.jeton_temporaire)
@@ -114,7 +115,7 @@ async function principal() {
   // Espaces web : le jeton part en cookie httpOnly, jamais dans le corps
   const connexionWeb = await api("/api/auth/connexion", {
     method: "POST",
-    corps: { telephone: "+22792000001", mot_de_passe: "partenaire123", espace_web: true },
+    corps: { telephone: "+22792000001", mot_de_passe: motDePasse("partenaire"), espace_web: true },
   });
   const cookie = connexionWeb.entetes.get("set-cookie") || "";
   critere(
