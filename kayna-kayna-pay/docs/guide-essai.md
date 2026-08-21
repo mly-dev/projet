@@ -338,7 +338,44 @@ copy .env.example .env
 notepad .env
 ```
 
-Remplacez l'adresse par **la vôtre**, puis enregistrez et fermez :
+### Le chemin court
+
+Une commande suffit, et il n'y a aucune adresse à chercher :
+
+```
+npm install
+```
+
+```
+npm run essai
+```
+
+Elle repère l'adresse de votre PC sur le réseau local, **vérifie que la
+plateforme y répond vraiment**, puis lance Expo avec cette adresse :
+
+```
+  Recherche de la plateforme sur le réseau local…
+
+    ✓  192.168.1.231    Wi-Fi
+    ·  172.20.32.1      vEthernet (WSL)
+
+  ✓ Plateforme jointe. L'application visera http://192.168.1.231:3000
+```
+
+Une carte virtuelle — Docker, WSL, VirtualBox — est reconnue et écartée : c'est
+elle qui, choisie par erreur, donne l'énigmatique « Connexion impossible » alors
+que tout fonctionne.
+
+Si la plateforme n'est pas démarrée, la commande le dit avant d'afficher le QR,
+plutôt que de vous laisser le découvrir sur le téléphone.
+
+> `npm run essai -- --tunnel` si le Wi-Fi isole les appareils entre eux.
+> `set ADRESSE=192.168.1.50` avant la commande pour imposer une adresse.
+
+### Le chemin manuel
+
+Si vous préférez tout régler vous-même. Remplacez l'adresse par **la vôtre**,
+puis enregistrez et fermez :
 
 ```
 EXPO_PUBLIC_API_URL=http://192.168.1.10:3000
