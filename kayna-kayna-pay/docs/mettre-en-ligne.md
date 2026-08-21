@@ -138,18 +138,52 @@ rien.
 
 ---
 
-## 3. Répétition générale, sans rien payer
+## 3. Répétition générale, sans rien payer *(facultatif)*
 
-Avant de créer le moindre compte, montez chez vous exactement ce que montera
-l'hébergeur. Rien n'est facturé, rien n'est exposé, et les erreurs de
-configuration se découvrent ici.
+> **Cette étape peut être sautée.** Railway construit l'image sur ses propres
+> serveurs : Docker n'a pas besoin d'exister sur votre machine pour que le
+> déploiement fonctionne. Si l'installation de Docker Desktop résiste, passez
+> directement au chapitre 4 — vous ne perdez qu'un filet de sécurité, pas une
+> pièce nécessaire.
 
-Il faut **Docker Desktop** ([docker.com](https://www.docker.com/products/docker-desktop/)).
+Son intérêt : monter chez vous exactement ce que montera l'hébergeur, pour
+découvrir ici les erreurs de configuration plutôt qu'en ligne. Rien n'est
+facturé, rien n'est exposé.
+
+Il faut **Docker Desktop** ([docker.com](https://www.docker.com/products/docker-desktop/)),
+qui exige lui-même WSL 2 et la virtualisation activée dans le BIOS.
 
 ```
 cd plateforme
 docker compose up --build
 ```
+
+### Si vous voyez « failed to connect to the docker API »
+
+```
+unable to get image 'plateforme-plateforme': failed to connect to the docker API
+at npipe:////./pipe/dockerDesktopLinuxEngine … Le fichier spécifié est introuvable.
+```
+
+Ce tuyau n'existe que pendant que Docker Desktop tourne. Le message ne parle donc
+pas du projet, mais de Docker. Pour savoir lequel des deux cas s'applique :
+
+```
+docker version
+```
+
+| Ce que vous lisez | Ce que c'est | Le geste |
+|---|---|---|
+| `Client:` puis `Server:` avec des versions | tout va bien | relancez `docker compose up --build` |
+| `Client:` seul, puis une erreur | Docker Desktop est **installé mais arrêté** | lancez-le depuis le menu Démarrer, attendez que l'icône baleine cesse de s'animer, réessayez |
+| `docker n'est pas reconnu` | il n'est **pas installé** | `winget install Docker.DockerDesktop`, puis **redémarrez le PC** |
+
+Le premier démarrage prend plusieurs minutes : Docker Desktop monte une machine
+Linux en arrière-plan. Tant que la baleine s'anime, il n'est pas prêt.
+
+Si `wsl --install` est réclamé, ou si le démarrage échoue sur la virtualisation,
+c'est un réglage BIOS (*Intel VT-x* / *AMD-V*) — et c'est le moment de se
+rappeler que ce chapitre est facultatif.
 
 La première fois, peuplez la base dans une autre fenêtre :
 
