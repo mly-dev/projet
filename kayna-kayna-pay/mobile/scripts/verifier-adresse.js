@@ -17,27 +17,52 @@ const path = require("path");
 
 const SOURCE = path.join(__dirname, "..", "src", "api", "client.js");
 
-(async () => {
+// Charge le fichier de l'application après avoir remplacé les deux modules qui
+// n'existent qu'à l'intérieur de React Native. Chaque appel donne un module
+// neuf : l'adresse de construction est calculée au chargement, on peut donc
+// rejouer plusieurs environnements de départ.
+async function charger({ hostUri = null, adresseInscrite = undefined } = {}) {
   const brut = fs.readFileSync(SOURCE, "utf8");
-  const memoire = new Map();
-  const source = brut.replace(
+
+  let source = brut.replace(
     /^import AsyncStorage.*$/m,
-    "const AsyncStorage = globalThis.__stockage;"
+    `const AsyncStorage = (() => {
+       const m = new Map();
+       return {
+         getItem: async (c) => (m.has(c) ? m.get(c) : null),
+         setItem: async (c, v) => void m.set(c, v),
+         removeItem: async (c) => void m.delete(c),
+         multiRemove: async (cs) => cs.forEach((c) => m.delete(c)),
+       };
+     })();`
   );
   if (source === brut) {
     console.log("\n  [FAUX] L'import d'AsyncStorage a changé : ce contrôle ne teste plus rien.\n");
     process.exit(1);
   }
-  globalThis.__stockage = {
-    getItem: async (c) => (memoire.has(c) ? memoire.get(c) : null),
-    setItem: async (c, v) => void memoire.set(c, v),
-    removeItem: async (c) => void memoire.delete(c),
-    multiRemove: async (cs) => cs.forEach((c) => memoire.delete(c)),
-  };
 
-  const module = await import(
-    "data:text/javascript;base64," + Buffer.from(source).toString("base64")
+  const avant = source;
+  source = source.replace(
+    /^import Constants from "expo-constants";$/m,
+    `const Constants = ${JSON.stringify(hostUri ? { expoConfig: { hostUri } } : {})};`
   );
+  if (source === avant) {
+    console.log("\n  [FAUX] L'import d'expo-constants a changé : ce contrôle ne teste plus rien.\n");
+    process.exit(1);
+  }
+
+  // `process.env.EXPO_PUBLIC_API_URL` est remplacé par sa valeur au moment de
+  // l'empaquetage. On reproduit cette substitution ici.
+  source = source.replace(
+    /process\.env\.EXPO_PUBLIC_API_URL/g,
+    adresseInscrite === undefined ? "undefined" : JSON.stringify(adresseInscrite)
+  );
+
+  return import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
+}
+
+(async () => {
+  const module = await charger();
 
   let echecs = 0;
   const critere = (intitule, obtenu, attendu) => {
@@ -141,6 +166,33 @@ const SOURCE = path.join(__dirname, "..", "src", "api", "client.js");
 
   r = await module.testerAdresse("pas une adresse !!");
   critere("Une adresse invalide est écartée sans requête", r.erreur, "Adresse invalide.");
+
+  // --- Adresse de départ ---------------------------------------------------
+  // Sans réglage, l'application doit joindre la plateforme du premier coup dans
+  // Expo Go. Elle le fait en lisant l'adresse du PC qui lui sert le bundle.
+  console.log("\n  Adresse retenue au démarrage, avant tout réglage");
+  console.log("  " + "-".repeat(66));
+
+  const depart = async (options) => (await charger(options)).adresseDeConstruction();
+
+  critere("Expo Go : l'adresse du PC qui sert le bundle est reprise",
+    await depart({ hostUri: "192.168.1.231:8081" }), "http://192.168.1.231:3000");
+
+  critere("… même quand Expo passe par un tunnel",
+    await depart({ hostUri: "abc-xyz.exp.direct:80" }), "http://abc-xyz.exp.direct:3000");
+
+  critere("APK construit : l'adresse inscrite l'emporte",
+    await depart({ hostUri: "192.168.1.231:8081", adresseInscrite: "https://kkp.exemple.com" }),
+    "https://kkp.exemple.com");
+
+  critere("APK construit hors Expo Go : l'adresse inscrite sert seule",
+    await depart({ adresseInscrite: "https://kkp.exemple.com" }), "https://kkp.exemple.com");
+
+  critere("Un serveur Expo sur la boucle locale est ignoré",
+    await depart({ hostUri: "127.0.0.1:8081" }), "http://localhost:3000");
+
+  critere("Sans rien du tout, repli sur localhost",
+    await depart({}), "http://localhost:3000");
 
   console.log("\n  " + "-".repeat(66));
   if (echecs === 0) {

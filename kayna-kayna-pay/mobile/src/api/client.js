@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 // Adresse de la plateforme.
 //
@@ -11,7 +12,35 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // L'adresse choisie par l'utilisateur l'emporte sur celle de la construction,
 // et survit au redémarrage.
 
-const ADRESSE_CONSTRUCTION = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const PORT_PLATEFORME = 3000;
+
+// En développement, Expo Go charge le bundle depuis le PC du développeur :
+// hostUri porte l'adresse de ce PC sur le réseau local. Or c'est la même
+// machine qui fait tourner la plateforme. On en déduit donc son adresse, au
+// lieu de la faire chercher et recopier à la main.
+//
+// Sans cela, l'adresse par défaut est « localhost » — le téléphone lui-même,
+// où rien n'écoute. L'application annonce « Connexion impossible » alors que
+// les deux moitiés fonctionnent, ce qui en fait la panne la plus déroutante du
+// développement.
+//
+// Vaut null dans un APK construit : il n'y a alors pas de serveur de
+// développement, et c'est EXPO_PUBLIC_API_URL qui décide.
+function adresseDuServeurDeDeveloppement() {
+  const hote =
+    Constants.expoConfig?.hostUri ||
+    Constants.expoGoConfig?.debuggerHost ||
+    Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  if (!hote) return null;
+  const machine = String(hote).split(":")[0];
+  if (!machine || machine === "localhost" || machine === "127.0.0.1") return null;
+  return `http://${machine}:${PORT_PLATEFORME}`;
+}
+
+const ADRESSE_CONSTRUCTION =
+  process.env.EXPO_PUBLIC_API_URL ||
+  adresseDuServeurDeDeveloppement() ||
+  "http://localhost:3000";
 const CLE = "kkp_adresse_serveur";
 
 let adresse = ADRESSE_CONSTRUCTION;
